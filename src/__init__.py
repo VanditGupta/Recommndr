@@ -4,14 +4,5 @@ __version__ = "0.1.0"
 __author__ = "Recommndr Team"
 __email__ = "team@recommndr.com"
 
-from . import data_generation
-from . import validation
-from . import processing
-from . import utils
-
-__all__ = [
-    "data_generation",
-    "validation", 
-    "processing",
-    "utils"
-]
+# Don't auto-import to avoid settings dependency issues
+# Import modules only when explicitly needed

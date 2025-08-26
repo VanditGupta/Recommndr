@@ -1,91 +1,146 @@
 version: '3.8'
 
 services:
-  # Main application service
+  # Main application
   recommndr:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      target: development
     container_name: recommndr-app
     ports:
       - "8000:8000"
     volumes:
+      - .:/app
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./src:/app/src
-      - ./config:/app/config
     environment:
       - PYTHONPATH=/app
       - LOG_LEVEL=INFO
-      - LOG_FORMAT=text
     depends_on:
       - redis
+      - postgres
+      - mlflow
     networks:
       - recommndr-network
-    restart: unless-stopped
+    command: ["tail", "-f", "/dev/null"]  # Keep container running
 
-  # Redis for caching and feature store (future phases)
+  # Redis for caching and feature serving
   redis:
     image: redis:7-alpine
     container_name: recommndr-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
     networks:
       - recommndr-network
-    restart: unless-stopped
+    command: redis-server --appendonly yes
 
-  # PostgreSQL for data storage (future phases)
+  # PostgreSQL for metadata and user data
   postgres:
     image: postgres:15-alpine
     container_name: recommndr-postgres
     environment:
       POSTGRES_DB: recommndr
-      POSTGRES_USER: recommndr_user
-      POSTGRES_PASSWORD: recommndr_password
+      POSTGRES_USER: recommndr
+      POSTGRES_PASSWORD: recommndr123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - recommndr-network
-    restart: unless-stopped
 
   # MLflow for experiment tracking (future phases)
   mlflow:
-    image: python:3.9-slim
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: recommndr-mlflow
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
-      - ./mlflow:/mlflow
-      - ./data:/app/data
-    working_dir: /app
-    command: >
-      bash -c "
-        pip install mlflow &&
-        mlflow server
-          --host 0.0.0.0
-          --port 5000
-          --backend-store-uri sqlite:///mlflow.db
-          --default-artifact-root file:/mlflow
-      "
+      - mlflow_data:/mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://localhost:5000
     networks:
       - recommndr-network
-    restart: unless-stopped
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root file:/mlflow
 
-  # Prometheus for monitoring (future phases)
+  # Kafka for streaming simulation (Phase 2)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: recommndr-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - recommndr-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: recommndr-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_CLEANER_DELETE_RETENTION_MS: 86400000
+      KAFKA_LOG_CLEANER_MIN_CLEANABLE_RATIO: 0.5
+      KAFKA_LOG_CLEANER_MAX_COMPACTION_LAG_MS: 604800000
+      KAFKA_LOG_RETENTION_MS: 604800000
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+    networks:
+      - recommndr-network
+
+  # Flink for stream processing (Phase 2) - ARM64 compatible
+  flink-jobmanager:
+    image: bitnami/flink:latest
+    container_name: recommndr-flink-jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - FLINK_MODE=jobmanager
+      - FLINK_JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - FLINK_JOB_MANAGER_RPC_PORT=6123
+      - FLINK_JOB_MANAGER_MEMORY_PROCESS_SIZE=1600m
+    networks:
+      - recommndr-network
+
+  flink-taskmanager:
+    image: bitnami/flink:latest
+    container_name: recommndr-flink-taskmanager
+    depends_on:
+      - flink-jobmanager
+    environment:
+      - FLINK_MODE=taskmanager
+      - FLINK_JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - FLINK_JOB_MANAGER_RPC_PORT=6123
+      - FLINK_TASK_MANAGER_MEMORY_PROCESS_SIZE=1728m
+      - FLINK_TASK_MANAGER_NUMBER_OF_TASK_SLOTS=1
+    networks:
+      - recommndr-network
+
+  # Prometheus for monitoring
   prometheus:
     image: prom/prometheus:latest
     container_name: recommndr-prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+    networks:
+      - recommndr-network
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -93,35 +148,26 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
-    networks:
-      - recommndr-network
-    restart: unless-stopped
 
-  # Grafana for visualization (future phases)
+  # Grafana for visualization
   grafana:
     image: grafana/grafana:latest
     container_name: recommndr-grafana
     ports:
       - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
     networks:
       - recommndr-network
-    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
 
 volumes:
   redis_data:
-    driver: local
   postgres_data:
-    driver: local
   prometheus_data:
-    driver: local
   grafana_data:
-    driver: local
+  mlflow_data:
 
 networks:
   recommndr-network:
