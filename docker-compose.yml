@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Main application service
+  recommndr:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: recommndr-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./src:/app/src
+      - ./config:/app/config
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=text
+    depends_on:
+      - redis
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+  # Redis for caching and feature store (future phases)
+  redis:
+    image: redis:7-alpine
+    container_name: recommndr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+  # PostgreSQL for data storage (future phases)
+  postgres:
+    image: postgres:15-alpine
+    container_name: recommndr-postgres
+    environment:
+      POSTGRES_DB: recommndr
+      POSTGRES_USER: recommndr_user
+      POSTGRES_PASSWORD: recommndr_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+  # MLflow for experiment tracking (future phases)
+  mlflow:
+    image: python:3.9-slim
+    container_name: recommndr-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow:/mlflow
+      - ./data:/app/data
+    working_dir: /app
+    command: >
+      bash -c "
+        pip install mlflow &&
+        mlflow server
+          --host 0.0.0.0
+          --port 5000
+          --backend-store-uri sqlite:///mlflow.db
+          --default-artifact-root file:/mlflow
+      "
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+  # Prometheus for monitoring (future phases)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: recommndr-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+  # Grafana for visualization (future phases)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: recommndr-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - recommndr-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  recommndr-network:
+    driver: bridge
