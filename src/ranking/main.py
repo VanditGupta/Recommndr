@@ -16,6 +16,7 @@ import time
 import argparse
 from pathlib import Path
 import logging
+import pickle
 
 from .feature_engineering import RankingFeatureEngineer
 from .lightgbm_ranker import LightGBMRanker
@@ -51,14 +52,26 @@ class RankingPipeline:
         
         # Load the trained ALS model and Faiss index
         try:
-            self.candidate_generator.load_trained_model("models/phase3/als_model.pkl")
-            logger.info("✅ ALS model loaded for candidate generation")
+            # Load the trained ALS model
+            als_model_path = Path("models/phase3/als_model.pkl")
+            if als_model_path.exists():
+                with open(als_model_path, 'rb') as f:
+                    self.candidate_generator.als_model = pickle.load(f)
+                logger.info("✅ ALS model loaded for candidate generation")
+            else:
+                logger.warning("ALS model file not found")
         except Exception as e:
             logger.warning(f"Could not load ALS model: {e}")
             
         try:
-            self.candidate_generator.build_faiss_index("models/phase3/faiss_index.bin")
-            logger.info("✅ Faiss index loaded for candidate generation")
+            # Load the trained Faiss index
+            faiss_index_path = Path("models/phase3/faiss_index.pkl")
+            if faiss_index_path.exists():
+                with open(faiss_index_path, 'rb') as f:
+                    self.candidate_generator.faiss_search = pickle.load(f)
+                logger.info("✅ Faiss index loaded for candidate generation")
+            else:
+                logger.warning("Faiss index file not found")
         except Exception as e:
             logger.warning(f"Could not load Faiss index: {e}")
         

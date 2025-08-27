@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/2bcd1c023d8f451983b336894ad8f4a9/artifacts
+end_time: 1756329534994
+entry_point_name: ''
+experiment_id: '621939714189266586'
+lifecycle_stage: active
+run_id: 2bcd1c023d8f451983b336894ad8f4a9
+run_name: thundering-skunk-767
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756329528334
+status: 3
+tags: []
+user_id: vanditgupta

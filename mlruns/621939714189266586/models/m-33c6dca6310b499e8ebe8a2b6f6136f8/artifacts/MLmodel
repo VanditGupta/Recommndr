@@ -1,0 +1,21 @@
+artifact_path: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/models/m-33c6dca6310b499e8ebe8a2b6f6136f8/artifacts
+flavors:
+  lightgbm:
+    code: null
+    data: model.lgb
+    lgb_version: 4.6.0
+    model_class: lightgbm.basic.Booster
+  python_function:
+    data: model.lgb
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.lightgbm
+    python_version: 3.11.13
+mlflow_version: 3.3.2
+model_id: m-33c6dca6310b499e8ebe8a2b6f6136f8
+model_size_bytes: 1647652
+model_uuid: m-33c6dca6310b499e8ebe8a2b6f6136f8
+prompts: null
+run_id: 2bcd1c023d8f451983b336894ad8f4a9
+utc_time_created: '2025-08-27 21:18:51.735785'

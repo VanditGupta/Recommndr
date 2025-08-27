@@ -1,0 +1,10 @@
+artifact_location: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/models/m-33c6dca6310b499e8ebe8a2b6f6136f8/artifacts
+creation_timestamp: 1756329531721
+experiment_id: '621939714189266586'
+last_updated_timestamp: 1756329534984
+model_id: m-33c6dca6310b499e8ebe8a2b6f6136f8
+model_type: null
+name: model
+source_run_id: 2bcd1c023d8f451983b336894ad8f4a9
+status: 2
+status_message: null
