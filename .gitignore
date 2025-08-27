@@ -149,6 +149,7 @@ evaluation_parameters/
 
 # MLflow
 mlflow/
+mlruns/
 
 # Docker
 .dockerignore
