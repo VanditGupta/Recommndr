@@ -1,0 +1,22 @@
+{
+  "feature_name": "user_avg_session_duration",
+  "registration_time": 1756323440.417154,
+  "registration_date": "2025-08-27T15:37:20.417154",
+  "name": "user_avg_session_duration",
+  "description": "Average session duration for user (last 30 days)",
+  "data_type": "float64",
+  "source_table": "sessions",
+  "calculation_logic": "AVG(session_duration) WHERE user_id = X AND created_at > 30 days ago",
+  "business_meaning": "User engagement pattern indicator",
+  "valid_range": [
+    0,
+    1440
+  ],
+  "null_handling": "Use global average",
+  "update_frequency": "Daily",
+  "owner": "data_team",
+  "stakeholders": [
+    "ml_team",
+    "product_team"
+  ]
+}

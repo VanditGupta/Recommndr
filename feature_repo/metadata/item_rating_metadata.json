@@ -1,0 +1,22 @@
+{
+  "feature_name": "item_rating",
+  "registration_time": 1756323440.415998,
+  "registration_date": "2025-08-27T15:37:20.415998",
+  "name": "item_rating",
+  "description": "Product average rating (1-5 scale)",
+  "data_type": "float64",
+  "source_table": "products",
+  "calculation_logic": "Average of all user ratings",
+  "business_meaning": "Quality indicator for recommendations",
+  "valid_range": [
+    1.0,
+    5.0
+  ],
+  "null_handling": "Use category average rating",
+  "update_frequency": "Hourly",
+  "owner": "data_team",
+  "stakeholders": [
+    "ml_team",
+    "product_team"
+  ]
+}

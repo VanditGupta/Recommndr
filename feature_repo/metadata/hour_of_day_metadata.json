@@ -1,0 +1,21 @@
+{
+  "feature_name": "hour_of_day",
+  "registration_time": 1756323440.416283,
+  "registration_date": "2025-08-27T15:37:20.416283",
+  "name": "hour_of_day",
+  "description": "Hour of day when request is made (0-23)",
+  "data_type": "int64",
+  "source_table": "real_time",
+  "calculation_logic": "Extract hour from request timestamp",
+  "business_meaning": "Time-based recommendation personalization",
+  "valid_range": [
+    0,
+    23
+  ],
+  "null_handling": "Use current server time",
+  "update_frequency": "Real-time",
+  "owner": "ml_team",
+  "stakeholders": [
+    "product_team"
+  ]
+}

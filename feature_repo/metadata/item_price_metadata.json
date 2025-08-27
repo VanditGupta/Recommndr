@@ -1,0 +1,22 @@
+{
+  "feature_name": "item_price",
+  "registration_time": 1756323440.415854,
+  "registration_date": "2025-08-27T15:37:20.415854",
+  "name": "item_price",
+  "description": "Product price in USD",
+  "data_type": "float64",
+  "source_table": "products",
+  "calculation_logic": "Direct price field from products table",
+  "business_meaning": "Price-based filtering and recommendations",
+  "valid_range": [
+    0.01,
+    10000.0
+  ],
+  "null_handling": "Use category median price",
+  "update_frequency": "Real-time",
+  "owner": "product_team",
+  "stakeholders": [
+    "ml_team",
+    "business_team"
+  ]
+}

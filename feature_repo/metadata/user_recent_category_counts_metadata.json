@@ -1,0 +1,18 @@
+{
+  "feature_name": "user_recent_category_counts",
+  "registration_time": 1756323440.4169369,
+  "registration_date": "2025-08-27T15:37:20.416937",
+  "name": "user_recent_category_counts",
+  "description": "User interactions by category (last 30 days)",
+  "data_type": "json",
+  "source_table": "interactions",
+  "calculation_logic": "Category interaction counts from last 30 days",
+  "business_meaning": "Recent category preferences for recommendations",
+  "valid_range": "JSON object with category counts",
+  "null_handling": "Empty JSON object {}",
+  "update_frequency": "Hourly",
+  "owner": "ml_team",
+  "stakeholders": [
+    "product_team"
+  ]
+}

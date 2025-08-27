@@ -1,0 +1,28 @@
+{
+  "feature_name": "user_preference_category",
+  "registration_time": 1756323440.415701,
+  "registration_date": "2025-08-27T15:37:20.415701",
+  "name": "user_preference_category",
+  "description": "User preferred product category",
+  "data_type": "string",
+  "source_table": "users",
+  "calculation_logic": "Most frequent category from user interactions",
+  "business_meaning": "Primary category affinity for recommendations",
+  "valid_values": [
+    "Electronics",
+    "Clothing",
+    "Books",
+    "Home & Garden",
+    "Sports & Outdoors",
+    "Beauty & Health",
+    "Toys & Games",
+    "Automotive"
+  ],
+  "null_handling": "Fill with most common category",
+  "update_frequency": "Daily",
+  "owner": "ml_team",
+  "stakeholders": [
+    "product_team",
+    "business_team"
+  ]
+}

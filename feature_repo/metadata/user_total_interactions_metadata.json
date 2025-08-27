@@ -1,0 +1,21 @@
+{
+  "feature_name": "user_total_interactions",
+  "registration_time": 1756323440.416805,
+  "registration_date": "2025-08-27T15:37:20.416805",
+  "name": "user_total_interactions",
+  "description": "Total number of user interactions (all time)",
+  "data_type": "int64",
+  "source_table": "interactions",
+  "calculation_logic": "COUNT(*) FROM interactions WHERE user_id = X",
+  "business_meaning": "User engagement and activity level",
+  "valid_range": [
+    0,
+    100000
+  ],
+  "null_handling": "Default to 0",
+  "update_frequency": "Real-time",
+  "owner": "data_team",
+  "stakeholders": [
+    "ml_team"
+  ]
+}

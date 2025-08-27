@@ -1,0 +1,10 @@
+artifact_location: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/models/m-a90af22ee84241168807928b76d52dbc/artifacts
+creation_timestamp: 1756323437582
+experiment_id: '621939714189266586'
+last_updated_timestamp: 1756323440129
+model_id: m-a90af22ee84241168807928b76d52dbc
+model_type: ''
+name: lightgbm_model
+source_run_id: 23164e54879647eaadfe6436b2057dd2
+status: 2
+status_message: null

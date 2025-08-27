@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582/090b2d7dcfff4d03ba0784ab80467680/artifacts
+end_time: 1756323436269
+entry_point_name: ''
+experiment_id: '551941527487335582'
+lifecycle_stage: active
+run_id: 090b2d7dcfff4d03ba0784ab80467680
+run_name: languid-steed-61
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756323433977
+status: 3
+tags: []
+user_id: vanditgupta

@@ -1,0 +1,28 @@
+{
+  "feature_name": "item_category",
+  "registration_time": 1756323440.4161339,
+  "registration_date": "2025-08-27T15:37:20.416134",
+  "name": "item_category",
+  "description": "Product category classification",
+  "data_type": "string",
+  "source_table": "products",
+  "calculation_logic": "Categorical field from product taxonomy",
+  "business_meaning": "Category-based recommendation filtering",
+  "valid_values": [
+    "Electronics",
+    "Clothing",
+    "Books",
+    "Home & Garden",
+    "Sports & Outdoors",
+    "Beauty & Health",
+    "Toys & Games",
+    "Automotive"
+  ],
+  "null_handling": "Classify as \"Other\"",
+  "update_frequency": "Daily",
+  "owner": "product_team",
+  "stakeholders": [
+    "ml_team",
+    "data_team"
+  ]
+}

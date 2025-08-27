@@ -1,0 +1,14 @@
+artifact_uri: file:///mlflow/mlruns/468439405297649500/ae2a8d754fae41ffb9740e4dadfa57ac/artifacts
+end_time: 1756323440402
+entry_point_name: ''
+experiment_id: '468439405297649500'
+lifecycle_stage: active
+run_id: ae2a8d754fae41ffb9740e4dadfa57ac
+run_name: sincere-hog-279
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756323440373
+status: 4
+tags: []
+user_id: vanditgupta

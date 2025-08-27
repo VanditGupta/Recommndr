@@ -1,0 +1,7 @@
+aliases: {}
+creation_timestamp: 1756323433879
+deployment_job_id: null
+deployment_job_state: null
+description: Recommndr engine model
+last_updated_timestamp: 1756323433879
+name: recommndr-similarity-engine

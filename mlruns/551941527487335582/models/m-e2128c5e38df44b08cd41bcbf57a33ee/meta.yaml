@@ -1,0 +1,10 @@
+artifact_location: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582/models/m-e2128c5e38df44b08cd41bcbf57a33ee/artifacts
+creation_timestamp: 1756323434156
+experiment_id: '551941527487335582'
+last_updated_timestamp: 1756323436236
+model_id: m-e2128c5e38df44b08cd41bcbf57a33ee
+model_type: ''
+name: als_pyfunc_model
+source_run_id: 090b2d7dcfff4d03ba0784ab80467680
+status: 2
+status_message: null

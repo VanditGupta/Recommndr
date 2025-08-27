@@ -1,0 +1,21 @@
+{
+  "feature_name": "is_weekend",
+  "registration_time": 1756323440.416539,
+  "registration_date": "2025-08-27T15:37:20.416539",
+  "name": "is_weekend",
+  "description": "Boolean flag for weekend (Saturday/Sunday)",
+  "data_type": "bool",
+  "source_table": "real_time",
+  "calculation_logic": "True if day_of_week in [5, 6]",
+  "business_meaning": "Weekend shopping behavior patterns",
+  "valid_values": [
+    true,
+    false
+  ],
+  "null_handling": "Use current server time",
+  "update_frequency": "Real-time",
+  "owner": "ml_team",
+  "stakeholders": [
+    "product_team"
+  ]
+}

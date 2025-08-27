@@ -1,0 +1,7 @@
+aliases: {}
+creation_timestamp: 1756323433867
+deployment_job_id: null
+deployment_job_state: null
+description: Recommndr ranker model
+last_updated_timestamp: 1756323440343
+name: recommndr-lightgbm-ranker

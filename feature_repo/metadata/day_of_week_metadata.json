@@ -1,0 +1,21 @@
+{
+  "feature_name": "day_of_week",
+  "registration_time": 1756323440.4164128,
+  "registration_date": "2025-08-27T15:37:20.416413",
+  "name": "day_of_week",
+  "description": "Day of week (0=Monday, 6=Sunday)",
+  "data_type": "int64",
+  "source_table": "real_time",
+  "calculation_logic": "Extract day of week from request timestamp",
+  "business_meaning": "Weekday vs weekend recommendation patterns",
+  "valid_range": [
+    0,
+    6
+  ],
+  "null_handling": "Use current server time",
+  "update_frequency": "Real-time",
+  "owner": "ml_team",
+  "stakeholders": [
+    "product_team"
+  ]
+}

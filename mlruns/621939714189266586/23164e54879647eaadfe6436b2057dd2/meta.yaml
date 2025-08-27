@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/23164e54879647eaadfe6436b2057dd2/artifacts
+end_time: 1756323440300
+entry_point_name: ''
+experiment_id: '621939714189266586'
+lifecycle_stage: active
+run_id: 23164e54879647eaadfe6436b2057dd2
+run_name: nimble-bug-307
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756323436300
+status: 3
+tags: []
+user_id: vanditgupta

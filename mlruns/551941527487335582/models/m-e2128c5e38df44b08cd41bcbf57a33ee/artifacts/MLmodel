@@ -1,0 +1,23 @@
+artifact_path: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582/models/m-e2128c5e38df44b08cd41bcbf57a33ee/artifacts
+flavors:
+  python_function:
+    artifacts:
+      model:
+        path: artifacts/als_model.pkl
+        uri: models/phase3/als_model.pkl
+    cloudpickle_version: 3.1.1
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.11.13
+    streamable: false
+mlflow_version: 3.3.2
+model_id: m-e2128c5e38df44b08cd41bcbf57a33ee
+model_size_bytes: 8980334
+model_uuid: m-e2128c5e38df44b08cd41bcbf57a33ee
+prompts: null
+run_id: 090b2d7dcfff4d03ba0784ab80467680
+utc_time_created: '2025-08-27 19:37:14.224623'

@@ -1,0 +1,6 @@
+artifact_location: file:///mlflow/mlruns/468439405297649500
+creation_time: 1756323440369
+experiment_id: '468439405297649500'
+last_update_time: 1756323440369
+lifecycle_stage: active
+name: similarity_engine

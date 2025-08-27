@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582/a87636ad00d04c3f9542970238fe7fd5/artifacts
+end_time: 1756323473306
+entry_point_name: ''
+experiment_id: '551941527487335582'
+lifecycle_stage: active
+run_id: a87636ad00d04c3f9542970238fe7fd5
+run_name: zealous-sloth-565
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756323471010
+status: 3
+tags: []
+user_id: vanditgupta

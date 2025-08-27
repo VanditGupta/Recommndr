@@ -1,0 +1,22 @@
+{
+  "feature_name": "session_duration_minutes",
+  "registration_time": 1756323440.4166698,
+  "registration_date": "2025-08-27T15:37:20.416670",
+  "name": "session_duration_minutes",
+  "description": "Current session duration in minutes",
+  "data_type": "float64",
+  "source_table": "sessions",
+  "calculation_logic": "Current time - session start time",
+  "business_meaning": "User engagement level indicator",
+  "valid_range": [
+    0,
+    1440
+  ],
+  "null_handling": "Default to 0",
+  "update_frequency": "Real-time",
+  "owner": "data_team",
+  "stakeholders": [
+    "ml_team",
+    "product_team"
+  ]
+}
