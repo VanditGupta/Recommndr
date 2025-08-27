@@ -51,51 +51,58 @@ Deliver an end-to-end recommendation system that:
   - Co-purchase matrix
 - Serve via `/similar_items` endpoint
 
-### Phase 6: Experiment Tracking, Versioning, Metadata
-- Track experiments via **MLflow**
-- Register models (ALS + LightGBM) in **MLflow Model Registry**
-- Feature metadata managed via **Feast Registry**
-- **Automatic model rollback triggers**:
-  - Performance degradation detection (CTR < baseline - 2σ)
-  - Latency threshold breach (>300ms p95)
-  - Error rate spike (>5% failed requests)
-  - Automated rollback to last stable model version
+### Phase 6: Serving Layer & API (Local Development)
+- **FastAPI endpoints** for recommendation serving
+- **Local MLflow model serving** and experiment tracking
+- **Local Feast feature store** with Redis backend
+- **Recommendation API endpoints**:
+  - `/recommend/{user_id}` - Get personalized recommendations
+  - `/similar_items/{item_id}` - Get similar items
+  - `/user_profile/{user_id}` - Get user profile and history
+- **API documentation** and testing
+- **Local model versioning** and rollback testing
 
-### Phase 7: A/B Testing Simulation
-- Offline A/B test: ALS+LightGBM vs. popularity-only
-- Metrics: CTR, ATC, Conversion Rate
-- Results logged in **MLflow**
+### Phase 7: Frontend (Local Development)
+- **Next.js application** for user interface
+- **Dynamic product cards** and recommendation displays
+- **User interaction components**:
+  - Product browsing and search
+  - Recommendation carousels
+  - Similar items widgets
+  - User preference management
+- **Responsive design** for mobile and desktop
+- **Local API integration** testing
+- **User experience validation**
 
-### Phase 8: Drift Detection & Monitoring
-- Monitor **feature distribution drift** (KS-test, PSI)
-- Detect **ranking score drift**
+### Phase 8: Online Deployment & Production Readiness
+- **Azure Container Apps** deployment for FastAPI services
+- **Azure MLflow Model Registry** integration
+- **Production Feast feature store** with Azure Redis
+- **Production monitoring** and health checks
+- **Azure Application Insights** integration
+- **Production API endpoints** with load balancing
+- **Environment configuration** and secrets management
+
+### Phase 9: Production Monitoring & Drift Detection
+- **Feature distribution drift** monitoring (KS-test, PSI)
 - **Model performance monitoring**:
   - Real-time CTR tracking
   - Latency percentile monitoring (p50, p95, p99)
   - Error rate and exception tracking
-- Drift alerts via **Prometheus + Grafana**
-- **Automated rollback integration** with drift detection
+- **Drift alerts** via Azure Monitor + Prometheus
+- **Automated rollback triggers** and execution
+- **Performance dashboards** and alerting
+- **Model health checks** and validation
 
-### Phase 9: Serving Layer & API
-- Use **FastAPI** + **ONNX Runtime** for low-latency serving
-- Implement **async endpoints** for better throughput
-- **Health checks** and **performance monitoring** endpoints
-- **Model versioning endpoints** for A/B traffic splitting
-- **Benchmark APIs** using `time.perf_counter()` or `wrk`
-
-### Phase 10: Frontend
-- Built with **Next.js**
-- Dynamic product cards, filters, similar items carousel
-- Deployed on **Azure Static Web Apps**
-
-### Phase 11: Infrastructure, Security, CI/CD
-- Local stack: Docker Compose (FastAPI, Redis, MLflow, etc.)
-- Production: Azure Container Apps + Static Web Apps
-- Secrets in **Azure Key Vault**
-- CI/CD with **GitHub Actions**
-- **Multi-stage Docker builds** and **layer caching**
+### Phase 10: Frontend Deployment & Infrastructure
+- **Azure Static Web Apps** deployment for Next.js frontend
+- **Production frontend** with Azure CDN
+- **CI/CD pipeline** with GitHub Actions
+- **Multi-stage Docker builds** and layer caching
 - **Blue-green deployment** strategy for zero-downtime rollbacks
-- IP restrictions + JWT for security
+- **Security hardening** with Azure Key Vault
+- **IP restrictions** and JWT authentication
+- **Performance optimization** and monitoring
 
 ## 🛠️ Optimization Techniques Added
 
@@ -141,19 +148,18 @@ Deliver an end-to-end recommendation system that:
 graph TD
   A[User] -->|clicks/views| B[Kafka]
   B --> C[Flink stream processor]
-  C --> D[Feast (Azure Redis)]
-  E[ALS/Faiss Training] --> F[MLflow Registry]
+  C --> D[Feast (Local Redis)]
+  E[ALS/Faiss Training] --> F[Local MLflow]
   G[LightGBM + ONNX] --> F
-  H[Drift Detection] --> I[Prometheus]
-  J[FastAPI Serving] --> D
-  J --> F
-  J --> K[ONNX Runtime]
-  K --> L[Frontend: Next.js]
-  I --> M[Grafana]
-  N[DVC + GE] --> E
-  O[Model Monitor] --> P[Auto Rollback]
-  P --> F
-  I --> O
+  H[FastAPI Local] --> D
+  H --> F
+  H --> I[ONNX Runtime]
+  I --> J[Next.js Frontend]
+  K[Production] --> L[Azure Container Apps]
+  K --> M[Azure MLflow Registry]
+  K --> N[Azure Redis + Feast]
+  O[Monitoring] --> P[Azure Monitor]
+  O --> Q[Prometheus + Grafana]
 ```
 
 ## 💸 Cost Estimate (Deployment Only)
@@ -166,6 +172,21 @@ graph TD
 | Azure Static Web Apps | Free |
 | Azure Key Vault | Free |
 | **Total** | **~$10–12/month** |
+
+## 📊 Project Status
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1 | ✅ Complete | Data Generation, Validation & Versioning |
+| 2 | ✅ Complete | Streaming Ingestion & Feature Pipeline |
+| 3 | ✅ Complete | Retrieval/Candidate Generation |
+| 4 | ✅ Complete | Ranking |
+| 5 | ✅ Complete | Similarity Layer |
+| 6 | 🔄 In Progress | Serving Layer & API (Local Development) |
+| 7 | ⏳ Pending | Frontend (Local Development) |
+| 8 | ⏳ Pending | Online Deployment & Production Readiness |
+| 9 | ⏳ Pending | Production Monitoring & Drift Detection |
+| 10 | ⏳ Pending | Frontend Deployment & Infrastructure |
 
 ## ✅ Success Criteria
 
