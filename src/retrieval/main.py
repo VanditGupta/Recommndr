@@ -52,11 +52,12 @@ class CandidateGenerationPipeline:
         try:
             # Load user-item matrix
             matrix_path = self.data_dir / "user_item_matrix.npz"
-            if matrix_path.exists():
-                self.user_item_matrix = csr_matrix.load_npz(str(matrix_path))
-                logger.info(f"✅ Loaded user-item matrix: {self.user_item_matrix.shape}")
-            else:
-                raise FileNotFoundError(f"User-item matrix not found at {matrix_path}")
+            if not matrix_path.exists():
+                raise FileNotFoundError(f"User-item matrix not found: {matrix_path}")
+            
+            from scipy.sparse import load_npz
+            self.user_item_matrix = load_npz(str(matrix_path))
+            logger.info(f"✅ Loaded user-item matrix: {self.user_item_matrix.shape}")
             
             # Load mappings
             with open(self.data_dir / "user_mapping.pkl", "rb") as f:

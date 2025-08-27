@@ -149,7 +149,14 @@ class ALSModel:
                 continue
                 
             ratings = user_item_matrix[user_id, user_items].toarray().flatten()
-            predictions = self.predict(user_id, user_items)
+            
+            # Calculate predictions directly during training
+            user_factor = self.user_factors[user_id]
+            item_factors = self.item_factors[user_items]
+            predictions = (user_factor @ item_factors.T + 
+                          self.user_biases[user_id] + 
+                          self.item_biases[user_items] + 
+                          self.global_bias)
             
             # MSE loss
             loss = np.mean((ratings - predictions) ** 2)
