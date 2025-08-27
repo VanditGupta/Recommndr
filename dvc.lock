@@ -15,8 +15,8 @@ stages:
       size: 956
     - path: src/data_generation/
       hash: md5
-      md5: 49598850a69e721bdf0beffe738b908a.dir
-      size: 102552
+      md5: c90a928c5da6dcf87887190313301e41.dir
+      size: 103507
       nfiles: 8
     - path: src/utils/
       hash: md5
@@ -30,20 +30,20 @@ stages:
       size: 6750
     - path: data/raw/interactions/interactions.parquet
       hash: md5
-      md5: 43d657cb12080efe1bc07da0c27d3469
-      size: 3302402
+      md5: 43fcb1365088b4139166564670f5b69d
+      size: 3356422
     - path: data/raw/metadata/generation_metadata.json
       hash: md5
-      md5: 48300d84e225c35a8e73cc15eeb64117
+      md5: 90e6c26d807b58f6481f5d9c73aa335f
       size: 421
     - path: data/raw/products/products.parquet
       hash: md5
-      md5: f14d32066cf718890a6abb82bbeea9e0
-      size: 81167
+      md5: 5810c8e16198f63c8446c9c4d5727fa5
+      size: 81181
     - path: data/raw/users/users.parquet
       hash: md5
-      md5: e4eeb0e1c461e9a36bf0bf9e213a76d7
-      size: 392985
+      md5: 44d91d9eb7ff94f3739eb2c3ff0a71d8
+      size: 395292
   data_validation:
     cmd: python -m src.validation.main --output-report data/validation_report.txt
       --quality-threshold 0.8
@@ -55,8 +55,8 @@ stages:
       nfiles: 5
     - path: data/raw
       hash: md5
-      md5: 8c9a17d62837c2a397c67526023def32.dir
-      size: 3789873
+      md5: 6742d2c90613962cc8010358028b8720.dir
+      size: 3846214
       nfiles: 6
     - path: src/utils
       hash: md5
@@ -71,8 +71,8 @@ stages:
     outs:
     - path: data/validation_report.txt
       hash: md5
-      md5: ca72eeadb77ff5839b64a379721c3821
-      size: 904
+      md5: 8bdbedae1acb4bcf4c9462377a221d8c
+      size: 726
   data_processing:
     cmd: python -m src.processing.main
     deps:
@@ -83,13 +83,13 @@ stages:
       nfiles: 5
     - path: data/raw
       hash: md5
-      md5: 8c9a17d62837c2a397c67526023def32.dir
-      size: 3789873
+      md5: 6742d2c90613962cc8010358028b8720.dir
+      size: 3846214
       nfiles: 6
     - path: data/validation_report.txt
       hash: md5
-      md5: ca72eeadb77ff5839b64a379721c3821
-      size: 904
+      md5: 8bdbedae1acb4bcf4c9462377a221d8c
+      size: 726
     - path: src/processing
       hash: md5
       md5: 621d591ebea198733275ff759e24f27c.dir
@@ -103,11 +103,11 @@ stages:
     outs:
     - path: data/features
       hash: md5
-      md5: 89c7156564fc6a9d4b2b881c8dbd88d2.dir
-      size: 5946759
+      md5: 055e43af564b1a2226469fdee8c8cd2e.dir
+      size: 6062984
       nfiles: 3
     - path: data/processed
       hash: md5
-      md5: c39ab00cbff8fcb616205d09d57f5e52.dir
-      size: 3962779
+      md5: 904b162196bed388b5c81e1443ea1cfe.dir
+      size: 4017875
       nfiles: 3
