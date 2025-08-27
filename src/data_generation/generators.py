@@ -190,14 +190,39 @@ class UserGenerator:
         return random.choice(main_categories)
     
     def generate_users(self, num_users: int) -> List[User]:
-        """Generate synthetic users."""
+        """Generate synthetic users with cold-start scenarios."""
         users = []
         
-        for _ in range(num_users):
+        # Define user types for cold-start scenarios
+        user_types = {
+            'new_user': 0.15,      # 15% new users (registered < 30 days)
+            'active_user': 0.60,    # 60% active users (regular activity)
+            'power_user': 0.20,     # 20% power users (high activity)
+            'inactive_user': 0.05   # 5% inactive users (no activity > 90 days)
+        }
+        
+        for i in range(num_users):
+            # Determine user type based on weights
+            user_type = random.choices(list(user_types.keys()), weights=list(user_types.values()))[0]
+            
             # Generate base user data
             age = self._generate_age()
             income_level = self._generate_income_level()
             preference_category = self._generate_preference_category()
+            
+            # Adjust creation date and activity based on user type
+            if user_type == 'new_user':
+                created_at = fake.date_time_between(start_date='-30d', end_date='-1d')
+                last_active = fake.date_time_between(start_date='-7d', end_date='now')
+            elif user_type == 'active_user':
+                created_at = fake.date_time_between(start_date='-1y', end_date='-3m')
+                last_active = fake.date_time_between(start_date='-7d', end_date='now')
+            elif user_type == 'power_user':
+                created_at = fake.date_time_between(start_date='-2y', end_date='-6m')
+                last_active = fake.date_time_between(start_date='-1d', end_date='now')
+            else:  # inactive_user
+                created_at = fake.date_time_between(start_date='-2y', end_date='-1y')
+                last_active = fake.date_time_between(start_date='-90d', end_date='-60d')
             
             # Create user
             user = User(
@@ -211,20 +236,14 @@ class UserGenerator:
                 language_preference=random.choice(self.languages),
                 timezone=random.choice(self.timezones),
                 email=fake.email(),
-                created_at=fake.date_time_between(
-                    start_date="-2y",
-                    end_date="-1m"
-                ),
-                last_active=fake.date_time_between(
-                    start_date="-1m",
-                    end_date="now"
-                )
+                created_at=created_at,
+                last_active=last_active
             )
             
             users.append(user)
             self.user_id_counter += 1
         
-        logger.info(f"Generated {len(users)} users")
+        logger.info(f"Generated {len(users)} users with cold-start scenarios")
         return users
 
 
@@ -234,6 +253,18 @@ class ProductGenerator:
     def __init__(self, categories: List[Category]):
         self.categories = categories
         self.product_id_counter = 1
+        
+        # Seasonal patterns for different categories
+        self.seasonal_multipliers = {
+            "Electronics": {"spring": 0.8, "summer": 0.9, "fall": 1.0, "winter": 1.2},
+            "Clothing": {"spring": 1.1, "summer": 1.3, "fall": 1.0, "winter": 0.8},
+            "Home & Garden": {"spring": 1.2, "summer": 1.1, "fall": 0.9, "winter": 0.7},
+            "Sports & Outdoors": {"spring": 1.0, "summer": 1.4, "fall": 1.1, "winter": 0.6},
+            "Books": {"spring": 0.9, "summer": 0.8, "fall": 1.0, "winter": 1.1},
+            "Beauty & Health": {"spring": 1.1, "summer": 1.2, "fall": 0.9, "winter": 1.0},
+            "Toys & Games": {"spring": 0.8, "summer": 0.7, "fall": 1.0, "winter": 1.4},
+            "Automotive": {"spring": 1.0, "summer": 1.1, "fall": 0.9, "winter": 0.8}
+        }
         
         # Product templates for different categories
         self.product_templates = {
@@ -274,6 +305,29 @@ class ProductGenerator:
             "colors": ["Black", "White", "Blue", "Red"],
             "sizes": ["Small", "Medium", "Large", "One Size"]
         }
+    
+    def _get_seasonal_multiplier(self, category_name: str, month: int) -> float:
+        """Get seasonal price multiplier for a category in a given month."""
+        # Define seasons
+        seasons = {
+            'spring': (3, 5),    # March-May
+            'summer': (6, 8),    # June-August
+            'fall': (9, 11),     # September-November
+            'winter': (12, 2)    # December-February
+        }
+        
+        # Find current season
+        current_season = None
+        for season, (start, end) in seasons.items():
+            if start <= month <= end or (start > end and (month >= start or month <= end)):
+                current_season = season
+                break
+        
+        # Get multiplier for category and season
+        if category_name in self.seasonal_multipliers and current_season:
+            return self.seasonal_multipliers[category_name].get(current_season, 1.0)
+        
+        return 1.0
     
     def _generate_product_name(self, category: str, subcategory: str) -> str:
         """Generate realistic product name."""
@@ -319,10 +373,17 @@ class ProductGenerator:
             name = self._generate_product_name(main_category.name, subcategory.name)
             description = self._generate_description(name, main_category.name, subcategory.name)
             
-                    # Generate realistic pricing (USD)
+                    # Generate realistic pricing (USD) with seasonal adjustments
             base_price = random.uniform(*template["price_range"])
+            
+            # Apply seasonal pricing
+            current_month = datetime.now().month
+            seasonal_multiplier = self._get_seasonal_multiplier(main_category.name, current_month)
+            seasonal_price = base_price * seasonal_multiplier
+            
+            # Apply discount
             discount = random.choices([0, 5, 10, 15, 20, 25, 30], weights=[0.3, 0.25, 0.2, 0.15, 0.07, 0.02, 0.01])[0]
-            final_price = round(base_price * (1 - discount / 100), 2)
+            final_price = round(seasonal_price * (1 - discount / 100), 2)
             
             # Create product
             product = Product(
@@ -386,6 +447,53 @@ class InteractionGenerator:
         """Generate unique session ID."""
         return f"session_{user_id}_{random.randint(1000, 9999)}"
     
+    def _get_seasonal_interaction_weights(self, category: str) -> Dict[str, float]:
+        """Get seasonal interaction weights for a category."""
+        current_month = datetime.now().month
+        
+        # Define seasons
+        seasons = {
+            'spring': (3, 5),    # March-May
+            'summer': (6, 8),    # June-August
+            'fall': (9, 11),     # September-November
+            'winter': (12, 2)    # December-February
+        }
+        
+        # Find current season
+        current_season = None
+        for season, (start, end) in seasons.items():
+            if start <= current_month <= end or (start > end and (current_month >= start or current_month <= end)):
+                current_season = season
+                break
+        
+        # Base weights
+        base_weights = self.interaction_weights.copy()
+        
+        # Apply seasonal adjustments based on category
+        if current_season:
+            if category == "Clothing" and current_season in ["spring", "summer"]:
+                # More purchases during spring/summer for clothing
+                base_weights["purchase"] *= 1.5
+                base_weights["add_to_cart"] *= 1.3
+            elif category == "Electronics" and current_season == "winter":
+                # More electronics purchases during winter (holiday season)
+                base_weights["purchase"] *= 1.4
+                base_weights["view"] *= 1.2
+            elif category == "Sports & Outdoors" and current_season == "summer":
+                # More outdoor sports during summer
+                base_weights["purchase"] *= 1.6
+                base_weights["view"] *= 1.4
+            elif category == "Toys & Games" and current_season == "winter":
+                # More toy purchases during winter (holiday season)
+                base_weights["purchase"] *= 1.8
+                base_weights["add_to_cart"] *= 1.5
+        
+        # Normalize weights
+        total_weight = sum(base_weights.values())
+        normalized_weights = {k: v/total_weight for k, v in base_weights.items()}
+        
+        return normalized_weights
+    
     def _generate_interaction_timestamp(self, user: User) -> datetime:
         """Generate realistic interaction timestamp."""
         # Base timestamp from user's last active
@@ -411,7 +519,7 @@ class InteractionGenerator:
         )[0], 1)
     
     def generate_interactions(self, num_interactions: int) -> List[Interaction]:
-        """Generate synthetic interactions."""
+        """Generate synthetic interactions with seasonal patterns."""
         interactions = []
         
         for _ in range(num_interactions):
@@ -419,10 +527,13 @@ class InteractionGenerator:
             user = random.choice(self.users)
             product = random.choice(self.products)
             
-            # Generate interaction type based on weights
+            # Get seasonal interaction weights
+            seasonal_weights = self._get_seasonal_interaction_weights(product.category)
+            
+            # Generate interaction type based on seasonal weights
             interaction_type = random.choices(
-                list(self.interaction_weights.keys()),
-                weights=list(self.interaction_weights.values())
+                list(seasonal_weights.keys()),
+                weights=list(seasonal_weights.values())
             )[0]
             
             # Generate timestamp

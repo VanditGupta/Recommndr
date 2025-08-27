@@ -1,64 +1,45 @@
 stages:
   data_generation:
-    cmd: python -m src.data_generation.main --format parquet
+    cmd: python -m src.data_generation.main --users 10000 --products 1000 --interactions
+      100000
     deps:
-      - src/data_generation/
-      - src/utils/
-      - config/
-      - requirements.txt
+    - src/data_generation/
+    - src/utils/
+    - config/
+    - requirements.txt
     outs:
-      - data/raw/users/users.parquet:
-          persist: true
-      - data/raw/products/products.parquet:
-          persist: true
-      - data/raw/interactions/interactions.parquet:
-          persist: true
-      - data/raw/categories/categories.parquet:
-          persist: true
-      - data/raw/metadata/generation_metadata.json:
-          persist: true
-    metrics:
-      - data/raw/metadata/generation_metadata.json:
-          cache: false
-    plots:
-      - data/raw/metadata/generation_metadata.json:
-          cache: false
+    - data/raw/users/users.parquet:
+        persist: true
+    - data/raw/products/products.parquet:
+        persist: true
+    - data/raw/interactions/interactions.parquet:
+        persist: true
+    - data/raw/categories/categories.parquet:
+        persist: true
+    - data/raw/metadata/generation_metadata.json:
+        persist: true
     meta:
-      name: "Generate synthetic e-commerce data"
-      description: "Generate users, products, interactions, and categories data"
-      tags: ["data", "generation", "synthetic"]
-  
-  data_validation:
-    cmd: python -m src.validation.main --strict --output-report data/validation_report.txt
-    deps:
-      - src/validation/
-      - src/utils/
-      - config/
-      - data_generation
-    outs:
-      - data/validation_report.txt:
-          persist: true
-    metrics:
-      - data/validation_report.txt:
-          cache: false
-    meta:
-      name: "Validate generated data"
-      description: "Validate data quality using Great Expectations"
-      tags: ["data", "validation", "quality"]
-  
+      name: Generate synthetic e-commerce data
+      description: Create synthetic users, products, interactions, and categories
+      tags: [data, generation, synthetic]
   data_processing:
     cmd: python -m src.processing.main
     deps:
-      - src/processing/
-      - src/utils/
-      - config/
-      - data_validation
+    - config
+    - data/raw
+    - data/validation_report.txt
+    - src/processing
+    - src/utils
     outs:
-      - data/processed/:
-          persist: true
-      - data/features/:
-          persist: true
-    meta:
-      name: "Process and feature engineer data"
-      description: "Clean data and create features for ML models"
-      tags: ["data", "processing", "features"]
+    - data/features
+    - data/processed
+  data_validation:
+    cmd: python -m src.validation.main --output-report data/validation_report.txt
+      --quality-threshold 0.8
+    deps:
+    - config
+    - data/raw
+    - src/utils
+    - src/validation
+    outs:
+    - data/validation_report.txt

@@ -46,6 +46,25 @@ class Settings(BaseSettings):
     BATCH_SIZE: int = Field(default=1000, description="Batch size for data processing")
     MAX_WORKERS: int = Field(default=4, description="Maximum number of worker processes")
     
+    # Azure configuration settings
+    AZURE_RESOURCE_GROUP: str = Field(default="recommndr-rg", description="Azure resource group name")
+    AZURE_LOCATION: str = Field(default="eastus", description="Azure location/region")
+    AZURE_STORAGE_ACCOUNT_NAME: str = Field(default="recommndrstorage", description="Azure storage account name")
+    AZURE_STORAGE_ACCOUNT_KEY: Optional[str] = Field(default=None, description="Azure storage account key")
+    AZURE_STORAGE_CONNECTION_STRING: Optional[str] = Field(default=None, description="Azure storage connection string")
+    AZURE_ACR_NAME: str = Field(default="recommndracr", description="Azure container registry name")
+    AZURE_ACR_LOGIN_SERVER: str = Field(default="recommndracr.azurecr.io", description="Azure ACR login server")
+    AZURE_ACR_USERNAME: Optional[str] = Field(default=None, description="Azure ACR username")
+    AZURE_ACR_PASSWORD: Optional[str] = Field(default=None, description="Azure ACR password")
+    AZURE_KEY_VAULT_NAME: str = Field(default="recommndr-kv", description="Azure key vault name")
+    AZURE_KEY_VAULT_URI: str = Field(default="https://recommndr-kv.vault.azure.net/", description="Azure key vault URI")
+    AZURE_ML_WORKSPACE_NAME: str = Field(default="recommndr-ml", description="Azure ML workspace name")
+    AZURE_MLFLOW_TRACKING_URI: str = Field(default="", description="Azure MLflow tracking URI")
+    AZURE_DATA_CONTAINER: str = Field(default="data", description="Azure data container name")
+    AZURE_MODELS_CONTAINER: str = Field(default="models", description="Azure models container name")
+    AZURE_SUBSCRIPTION_ID: str = Field(default="", description="Azure subscription ID")
+    AZURE_TENANT_ID: str = Field(default="", description="Azure tenant ID")
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

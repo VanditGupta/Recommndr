@@ -1,0 +1,113 @@
+schema: '2.0'
+stages:
+  data_generation:
+    cmd: python -m src.data_generation.main --users 10000 --products 1000 --interactions
+      100000
+    deps:
+    - path: config/
+      hash: md5
+      md5: c1d652dc01675100cd566b4024798bb8.dir
+      size: 20453
+      nfiles: 5
+    - path: requirements.txt
+      hash: md5
+      md5: a7bc0a53827ee58c0d8de1b526e4a3f2
+      size: 956
+    - path: src/data_generation/
+      hash: md5
+      md5: 49598850a69e721bdf0beffe738b908a.dir
+      size: 102552
+      nfiles: 8
+    - path: src/utils/
+      hash: md5
+      md5: 499e14e052337c924d701c172646f2ec.dir
+      size: 43432
+      nfiles: 6
+    outs:
+    - path: data/raw/categories/categories.parquet
+      hash: md5
+      md5: 0690c1149cf48435d7d4cd076b877c35
+      size: 6750
+    - path: data/raw/interactions/interactions.parquet
+      hash: md5
+      md5: 43d657cb12080efe1bc07da0c27d3469
+      size: 3302402
+    - path: data/raw/metadata/generation_metadata.json
+      hash: md5
+      md5: 48300d84e225c35a8e73cc15eeb64117
+      size: 421
+    - path: data/raw/products/products.parquet
+      hash: md5
+      md5: f14d32066cf718890a6abb82bbeea9e0
+      size: 81167
+    - path: data/raw/users/users.parquet
+      hash: md5
+      md5: e4eeb0e1c461e9a36bf0bf9e213a76d7
+      size: 392985
+  data_validation:
+    cmd: python -m src.validation.main --output-report data/validation_report.txt
+      --quality-threshold 0.8
+    deps:
+    - path: config
+      hash: md5
+      md5: c1d652dc01675100cd566b4024798bb8.dir
+      size: 20453
+      nfiles: 5
+    - path: data/raw
+      hash: md5
+      md5: 8c9a17d62837c2a397c67526023def32.dir
+      size: 3789873
+      nfiles: 6
+    - path: src/utils
+      hash: md5
+      md5: 499e14e052337c924d701c172646f2ec.dir
+      size: 43432
+      nfiles: 6
+    - path: src/validation
+      hash: md5
+      md5: 26b837d799ac7679f89d7e0a85ab7723.dir
+      size: 58030
+      nfiles: 6
+    outs:
+    - path: data/validation_report.txt
+      hash: md5
+      md5: ca72eeadb77ff5839b64a379721c3821
+      size: 904
+  data_processing:
+    cmd: python -m src.processing.main
+    deps:
+    - path: config
+      hash: md5
+      md5: c1d652dc01675100cd566b4024798bb8.dir
+      size: 20453
+      nfiles: 5
+    - path: data/raw
+      hash: md5
+      md5: 8c9a17d62837c2a397c67526023def32.dir
+      size: 3789873
+      nfiles: 6
+    - path: data/validation_report.txt
+      hash: md5
+      md5: ca72eeadb77ff5839b64a379721c3821
+      size: 904
+    - path: src/processing
+      hash: md5
+      md5: 621d591ebea198733275ff759e24f27c.dir
+      size: 92836
+      nfiles: 10
+    - path: src/utils
+      hash: md5
+      md5: 499e14e052337c924d701c172646f2ec.dir
+      size: 43432
+      nfiles: 6
+    outs:
+    - path: data/features
+      hash: md5
+      md5: 89c7156564fc6a9d4b2b881c8dbd88d2.dir
+      size: 5946759
+      nfiles: 3
+    - path: data/processed
+      hash: md5
+      md5: c39ab00cbff8fcb616205d09d57f5e52.dir
+      size: 3962779
+      nfiles: 3

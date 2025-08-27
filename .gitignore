@@ -139,7 +139,7 @@ validation_report.txt
 
 # DVC
 .dvc/
-dvc.lock
+# dvc.lock
 
 # Great Expectations
 expectations/
