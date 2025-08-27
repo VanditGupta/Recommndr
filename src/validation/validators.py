@@ -7,10 +7,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from great_expectations.core.batch import RuntimeBatchRequest
-from great_expectations.data_context import BaseDataContext
+from great_expectations.data_context import FileDataContext
 from great_expectations.data_context.types.base import DataContextConfig
-# from great_expectations.data_context.types.resource_identifiers import GeCloudIdentifier  # Removed for compatibility
-from great_expectations.util import get_context
 
 from config.settings import settings, get_data_path
 from src.utils.logging import get_logger, log_performance_metrics, log_validation_result
@@ -34,16 +32,12 @@ class DataValidator:
         # Define validation expectations for each data type
         self.expectations = self._define_expectations()
     
-    def _setup_great_expectations(self) -> BaseDataContext:
+    def _setup_great_expectations(self) -> FileDataContext:
         """Setup Great Expectations context."""
         try:
-            # Try to get existing context
-            context = get_context()
-            logger.debug("Using existing Great Expectations context")
-        except Exception:
-            # Create new context
+            # Create new context directly
             logger.debug("Creating new Great Expectations context")
-            context = BaseDataContext(
+            context = FileDataContext(
                 project_config=DataContextConfig(
                     config_version=3.0,
                     plugins_directory=None,
@@ -80,8 +74,12 @@ class DataValidator:
                     }
                 )
             )
-        
-        return context
+            return context
+        except Exception as e:
+            logger.warning(f"Failed to create Great Expectations context: {e}")
+            # Fallback to simpler context
+            logger.info("Using fallback context setup")
+            return FileDataContext()
     
     def _define_expectations(self) -> Dict[str, List[Dict]]:
         """Define validation expectations for each data type."""
