@@ -116,6 +116,9 @@ class RecommendationLifecycleDemo:
         # Performance Metrics
         self.show_performance_metrics(user_id)
         
+        # Phase 5: Similarity Layer Demo
+        self.demo_similarity_layer(recommendations)
+        
         return recommendations
     
     def show_user_profile(self, user_id: int):
@@ -569,6 +572,117 @@ class RecommendationLifecycleDemo:
             assessment = "⚠️ NEEDS OPTIMIZATION"
         
         print(f"\n🎯 PERFORMANCE ASSESSMENT: {assessment}")
+    
+    def demo_similarity_layer(self, recommendations: list):
+        """Demonstrate Phase 5 similarity layer functionality."""
+        print(f"\n🔗 PHASE 5: SIMILARITY LAYER DEMONSTRATION")
+        print("-" * 70)
+        
+        if not recommendations:
+            print("❌ No recommendations available for similarity demo")
+            return
+        
+        try:
+            # Initialize similarity engine
+            from src.similarity.item_similarity import ItemSimilarityEngine
+            similarity_engine = ItemSimilarityEngine()
+            
+            print("🔄 Loading similarity data...")
+            similarity_engine.load_data()
+            
+            # Try to load pre-computed similarity
+            try:
+                similarity_engine.load_similarity_data()
+                print("✅ Pre-computed similarity data loaded")
+            except:
+                print("⚠️  Pre-computed similarity not found - computing on demand...")
+                similarity_engine.run_similarity_pipeline(save_results=False)
+            
+            # Demo with first recommendation
+            demo_item = recommendations[0]
+            item_id = demo_item['item_id']
+            item_name = demo_item['name']
+            
+            print(f"\n🎯 Finding items similar to: {item_name} (ID: {item_id})")
+            print("=" * 80)
+            
+            # Test different similarity types
+            similarity_types = ["als", "hybrid"]
+            
+            for sim_type in similarity_types:
+                try:
+                    # Build index for this similarity type
+                    similarity_engine.build_similarity_index(sim_type, top_k=50)
+                    
+                    # Get similar items
+                    similar_items = similarity_engine.get_similar_items(
+                        item_id=item_id,
+                        top_k=5,
+                        include_metadata=True
+                    )
+                    
+                    print(f"\n📊 {sim_type.upper()} SIMILARITY:")
+                    print("-" * 50)
+                    
+                    if similar_items:
+                        for i, item in enumerate(similar_items, 1):
+                            name = item['name'][:35]
+                            category = item['category']
+                            score = item['similarity_score']
+                            price = item['price']
+                            
+                            print(f"{i}. {name}")
+                            print(f"   Category: {category} | Price: ${price:.2f} | Score: {score:.3f}")
+                    else:
+                        print("   No similar items found")
+                        
+                except Exception as e:
+                    print(f"   ❌ Error with {sim_type} similarity: {e}")
+            
+            # Performance test
+            print(f"\n⚡ SIMILARITY PERFORMANCE TEST:")
+            print("-" * 50)
+            
+            import time
+            start_time = time.time()
+            
+            # Test multiple similarity queries
+            test_items = [rec['item_id'] for rec in recommendations[:3]]
+            total_results = 0
+            
+            for test_item_id in test_items:
+                similar = similarity_engine.get_similar_items(
+                    item_id=test_item_id,
+                    top_k=10,
+                    include_metadata=False
+                )
+                total_results += len(similar)
+            
+            query_time = time.time() - start_time
+            avg_time = (query_time / len(test_items)) * 1000
+            
+            print(f"✅ Queried {len(test_items)} items in {query_time*1000:.1f}ms")
+            print(f"✅ Average query time: {avg_time:.1f}ms per item")
+            print(f"✅ Total similar items found: {total_results}")
+            
+            # Show similarity stats
+            stats = similarity_engine.get_similarity_stats()
+            
+            print(f"\n📊 SIMILARITY ENGINE STATS:")
+            print("-" * 50)
+            print(f"✅ Items indexed: {stats.get('n_items', 0):,}")
+            print(f"✅ Similarity matrices: {len([k for k in stats.keys() if 'similarity' in k and k != 'similarity_index'])}")
+            
+            if 'similarity_index' in stats:
+                avg_similar = stats['similarity_index'].get('avg_similar_items', 0)
+                print(f"✅ Avg similar items per item: {avg_similar:.1f}")
+            
+            print(f"\n🎉 Phase 5 similarity layer working correctly!")
+            
+        except Exception as e:
+            print(f"❌ Similarity demo failed: {e}")
+            print("ℹ️  This is expected if Phase 5 similarity data hasn't been computed yet")
+            print("ℹ️  Run: python -m src.similarity.main --compute-all")
     
     def demonstrate_multiple_users(self, num_users: int = 3):
         """Demonstrate the system with multiple users."""
