@@ -101,8 +101,14 @@ class RecommendationLifecycleDemo:
         # Phase 3: Candidate Generation 
         candidates = self.generate_candidates(user_id)
         
+        # Show Phase 3 recommendations (ALS only)
+        als_recommendations = self.show_phase3_recommendations(user_id, candidates)
+        
         # Phase 4: Ranking & Final Recommendations
         recommendations = self.rank_and_recommend(user_id, candidates)
+        
+        # Phase 3 vs Phase 4 Comparison
+        self.compare_phase3_vs_phase4(user_id, als_recommendations, recommendations)
         
         # Analysis & Insights
         self.analyze_recommendations(user_id, recommendations)
@@ -229,6 +235,43 @@ class RecommendationLifecycleDemo:
         
         return candidates
     
+    def show_phase3_recommendations(self, user_id: int, candidates: list, top_k: int = 10):
+        """Show Phase 3 recommendations (ALS only) for comparison."""
+        print(f"\n🎯 PHASE 3 RESULTS: ALS-ONLY RECOMMENDATIONS")
+        print("-" * 70)
+        
+        # Get top candidates by ALS score
+        top_als_candidates = sorted(candidates, key=lambda x: x['als_score'], reverse=True)[:top_k]
+        
+        als_recommendations = []
+        for i, candidate in enumerate(top_als_candidates):
+            product_info = self.products_df[self.products_df['product_id'] == candidate['item_id']]
+            
+            if len(product_info) > 0:
+                product = product_info.iloc[0]
+                als_recommendations.append({
+                    'rank': i + 1,
+                    'item_id': candidate['item_id'],
+                    'name': product['name'],
+                    'category': product['category'],
+                    'brand': product['brand'],
+                    'price': float(product['price']),
+                    'rating': float(product['rating']),
+                    'als_score': candidate['als_score'],
+                    'description': product.get('description', '')[:40] + '...'
+                })
+        
+        print(f"🏆 TOP {top_k} ALS RECOMMENDATIONS (Collaborative Filtering Only):")
+        print("=" * 90)
+        
+        for rec in als_recommendations:
+            print(f"{rec['rank']:2d}. {rec['name'][:40]:<40}")
+            print(f"    Category: {rec['category']:<20} | Price: ${rec['price']:<8.2f}")
+            print(f"    Rating: {rec['rating']:.1f}/5 | ALS Score: {rec['als_score']:.3f}")
+            print()
+        
+        return als_recommendations
+
     def rank_and_recommend(self, user_id: int, candidates: list, top_k: int = 10):
         """Rank candidates using LightGBM and generate final recommendations (Phase 4)."""
         print(f"\n🤖 PHASE 4: INTELLIGENT RANKING (LightGBM)")
@@ -271,7 +314,7 @@ class RecommendationLifecycleDemo:
                 })
         
         # Display recommendations
-        print(f"\n🎁 TOP {top_k} PERSONALIZED RECOMMENDATIONS:")
+        print(f"\n🎁 TOP {top_k} LIGHTGBM RECOMMENDATIONS (ALS + Contextual Ranking):")
         print("=" * 100)
         
         for rec in recommendations:
@@ -282,6 +325,132 @@ class RecommendationLifecycleDemo:
             print()
         
         return recommendations
+    
+    def compare_phase3_vs_phase4(self, user_id: int, als_recommendations: list, lgb_recommendations: list):
+        """Compare Phase 3 (ALS) vs Phase 4 (LightGBM) recommendations."""
+        print(f"\n🔄 PHASE 3 vs PHASE 4 COMPARISON")
+        print("=" * 100)
+        
+        # Get user profile for context
+        user_info = self.users_df[self.users_df['user_id'] == user_id].iloc[0]
+        user_pref_category = user_info['preference_category']
+        user_income = user_info['income_level']
+        
+        print(f"👤 USER CONTEXT: {user_info['age']}y {user_info['gender']}, {user_income} income, prefers {user_pref_category}")
+        print()
+        
+        # Side-by-side comparison
+        print(f"{'Rank':<4} {'PHASE 3 (ALS Only)':<45} {'PHASE 4 (ALS + LightGBM)':<45}")
+        print("-" * 100)
+        
+        for i in range(min(len(als_recommendations), len(lgb_recommendations))):
+            als_rec = als_recommendations[i]
+            lgb_rec = lgb_recommendations[i]
+            
+            # Format ALS recommendation
+            als_name = als_rec['name'][:35]
+            als_info = f"{als_name} (${als_rec['price']:.0f}, {als_rec['rating']:.1f}⭐)"
+            
+            # Format LightGBM recommendation
+            lgb_name = lgb_rec['name'][:35]
+            lgb_info = f"{lgb_name} (${lgb_rec['price']:.0f}, {lgb_rec['rating']:.1f}⭐)"
+            
+            # Add indicators for user preference matching
+            als_match = "✨" if als_rec['category'] == user_pref_category else "  "
+            lgb_match = "✨" if lgb_rec['category'] == user_pref_category else "  "
+            
+            print(f"{i+1:<4} {als_match}{als_info:<43} {lgb_match}{lgb_info:<43}")
+        
+        print()
+        
+        # Analysis of changes
+        print(f"📊 RANKING CHANGES ANALYSIS:")
+        
+        # Calculate overlap
+        als_items = {rec['item_id'] for rec in als_recommendations}
+        lgb_items = {rec['item_id'] for rec in lgb_recommendations}
+        overlap = len(als_items & lgb_items)
+        overlap_percentage = (overlap / len(als_recommendations)) * 100
+        
+        print(f"   📈 Item Overlap: {overlap}/{len(als_recommendations)} items ({overlap_percentage:.0f}%)")
+        
+        # Category preference matching
+        als_pref_matches = sum(1 for rec in als_recommendations if rec['category'] == user_pref_category)
+        lgb_pref_matches = sum(1 for rec in lgb_recommendations if rec['category'] == user_pref_category)
+        
+        print(f"   ✨ Preference Category Matches:")
+        print(f"      Phase 3 (ALS): {als_pref_matches}/{len(als_recommendations)} items")
+        print(f"      Phase 4 (LGB): {lgb_pref_matches}/{len(lgb_recommendations)} items")
+        
+        if lgb_pref_matches > als_pref_matches:
+            print(f"      🎯 LightGBM improved preference matching by +{lgb_pref_matches - als_pref_matches} items!")
+        elif lgb_pref_matches < als_pref_matches:
+            print(f"      ⚠️  LightGBM reduced preference matching by {als_pref_matches - lgb_pref_matches} items")
+        else:
+            print(f"      ➡️  Same preference matching")
+        
+        # Price analysis
+        als_avg_price = np.mean([rec['price'] for rec in als_recommendations])
+        lgb_avg_price = np.mean([rec['price'] for rec in lgb_recommendations])
+        
+        print(f"   💰 Average Price:")
+        print(f"      Phase 3 (ALS): ${als_avg_price:.0f}")
+        print(f"      Phase 4 (LGB): ${lgb_avg_price:.0f}")
+        
+        price_diff = lgb_avg_price - als_avg_price
+        if abs(price_diff) > 50:
+            direction = "higher" if price_diff > 0 else "lower"
+            print(f"      📊 LightGBM recommends {direction} priced items (${abs(price_diff):.0f} difference)")
+        else:
+            print(f"      ➡️  Similar price ranges")
+        
+        # Quality analysis
+        als_avg_rating = np.mean([rec['rating'] for rec in als_recommendations])
+        lgb_avg_rating = np.mean([rec['rating'] for rec in lgb_recommendations])
+        
+        print(f"   ⭐ Average Quality Rating:")
+        print(f"      Phase 3 (ALS): {als_avg_rating:.1f}/5")
+        print(f"      Phase 4 (LGB): {lgb_avg_rating:.1f}/5")
+        
+        if lgb_avg_rating > als_avg_rating + 0.1:
+            print(f"      🌟 LightGBM improved quality by +{lgb_avg_rating - als_avg_rating:.1f} points!")
+        elif lgb_avg_rating < als_avg_rating - 0.1:
+            print(f"      ⚠️  LightGBM reduced quality by {als_avg_rating - lgb_avg_rating:.1f} points")
+        else:
+            print(f"      ➡️  Similar quality levels")
+        
+        # Show most significant moves
+        print(f"\n🔄 MOST SIGNIFICANT RANKING CHANGES:")
+        moves = []
+        
+        # Create position mappings
+        als_positions = {rec['item_id']: i for i, rec in enumerate(als_recommendations)}
+        lgb_positions = {rec['item_id']: i for i, rec in enumerate(lgb_recommendations)}
+        
+        for item_id in als_positions:
+            if item_id in lgb_positions:
+                move = als_positions[item_id] - lgb_positions[item_id]  # Positive = moved up
+                if abs(move) >= 2:  # Significant move
+                    product = self.products_df[self.products_df['product_id'] == item_id].iloc[0]
+                    moves.append({
+                        'item_id': item_id,
+                        'name': product['name'][:40],
+                        'category': product['category'],
+                        'move': move,
+                        'als_pos': als_positions[item_id] + 1,
+                        'lgb_pos': lgb_positions[item_id] + 1
+                    })
+        
+        # Sort by absolute move size
+        moves.sort(key=lambda x: abs(x['move']), reverse=True)
+        
+        for move in moves[:3]:  # Top 3 moves
+            direction = "⬆️" if move['move'] > 0 else "⬇️"
+            print(f"   {direction} {move['name']}: #{move['als_pos']} → #{move['lgb_pos']} ({move['move']:+d})")
+            print(f"      Category: {move['category']}")
+        
+        if not moves:
+            print(f"   ➡️  No significant ranking changes (most items moved <2 positions)")
     
     def analyze_recommendations(self, user_id: int, recommendations: list):
         """Analyze and explain the recommendations."""
