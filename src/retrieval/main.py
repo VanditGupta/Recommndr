@@ -8,13 +8,19 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 import pickle
+import logging
 
-from src.retrieval.models.als_model import ALSModel
-from src.retrieval.similarity.faiss_search import FaissSimilaritySearch
-from src.utils.logging import get_logger
-from config.settings import get_data_path
+from .models.als_model_optimized import OptimizedALSModel
+from .similarity.faiss_search import FaissSimilaritySearch
 
-logger = get_logger(__name__)
+# Setup basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+def get_data_path(data_type: str) -> Path:
+    """Get data path for given data type."""
+    base_path = Path(__file__).parent.parent.parent
+    return base_path / "data" / data_type
 
 
 class CandidateGenerationPipeline:
@@ -94,7 +100,7 @@ class CandidateGenerationPipeline:
         
         try:
             # Initialize ALS model
-            self.als_model = ALSModel(
+            self.als_model = OptimizedALSModel(
                 n_factors=n_factors,
                 n_iterations=n_iterations,
                 regularization=regularization

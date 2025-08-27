@@ -1,5 +1,10 @@
-"""Models for Phase 3: Retrieval."""
+"""Retrieval models for candidate generation."""
 
-from .als_model import ALSModel
+from .als_model_optimized import OptimizedALSModel, compare_performance, list_experiments, get_best_run
 
-__all__ = ["ALSModel"]
+__all__ = [
+    "OptimizedALSModel",
+    "compare_performance", 
+    "list_experiments",
+    "get_best_run"
+]

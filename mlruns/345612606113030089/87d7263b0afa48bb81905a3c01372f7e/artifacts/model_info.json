@@ -1,0 +1,10 @@
+{
+  "model_type": "OptimizedALSModel",
+  "model_path": "data/processed/als_quick_test.pkl",
+  "model_size_mb": 4.28078556060791,
+  "training_summary": {
+    "final_loss": 4103.796151666877,
+    "total_time": 38.06208515167236,
+    "avg_iteration_time": 3.8062085151672362
+  }
+}

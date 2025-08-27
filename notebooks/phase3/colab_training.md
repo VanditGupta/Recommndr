@@ -13,8 +13,13 @@
 
 ```python
 # Install required packages
-!pip install faiss-gpu implicit scipy numpy pandas
+!pip install faiss implicit scipy numpy pandas
 print("✅ Dependencies installed!")
+
+# Verify GPU support
+import faiss
+print(f"✅ Faiss version: {faiss.__version__}")
+print(f"✅ GPU available: {faiss.get_num_gpus() > 0}")
 ```
 
 ---
