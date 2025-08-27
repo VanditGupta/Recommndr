@@ -6,7 +6,7 @@ Build a **full-stack, production-grade machine learning engineering project** fo
 
 - Two-stage pipeline: **Collaborative Filtering + Ranking**
 - **Real-time serving** with FastAPI + ONNX
-- **ML experimentation, versioning, drift detection**
+- **ML experimentation, versioning, drift detection** (MLflow in Phase 8)
 - **Low latency (<100ms)** and **budget-friendly (<$15/month)** on **Azure**
 
 Models trained on **Google Colab (A100)**. The project simulates production-grade systems like those at Amazon, Flipkart.
@@ -52,17 +52,23 @@ Deliver an end-to-end recommendation system that:
 - Serve via `/similar_items` endpoint
 
 ### Phase 6: Serving Layer & API (Local Development)
+- **Status**: ✅ Complete
 - **FastAPI endpoints** for recommendation serving
-- **Local MLflow model serving** and experiment tracking
-- **Local Feast feature store** with Redis backend
+- **Lightweight API server** without heavy model loading (MLflow deferred to Phase 9)
+- **Mock data endpoints** ready for frontend development
+- **CORS support** for frontend integration
 - **Recommendation API endpoints**:
   - `/recommend/{user_id}` - Get personalized recommendations
   - `/similar_items/{item_id}` - Get similar items
   - `/user_profile/{user_id}` - Get user profile and history
-- **API documentation** and testing
-- **Local model versioning** and rollback testing
+  - `/health` - Health check endpoint
+  - `/docs` - Swagger UI documentation
+- **API documentation**: ✅ Swagger UI available at `/docs`
+- **Testing**: ✅ All endpoints tested and working
+- **Note**: Using mock data for frontend development. Real MLflow integration will be implemented in Phase 9.
 
 ### Phase 7: Frontend (Local Development)
+- **Status**: 🚀 Ready to Start
 - **Next.js application** for user interface
 - **Dynamic product cards** and recommendation displays
 - **User interaction components**:
@@ -71,17 +77,20 @@ Deliver an end-to-end recommendation system that:
   - Similar items widgets
   - User preference management
 - **Responsive design** for mobile and desktop
-- **Local API integration** testing
+- **Local API integration** testing with Phase 6 endpoints
 - **User experience validation**
+- **Note**: Phase 6 API is ready and tested. Can start frontend development immediately.
 
 ### Phase 8: Online Deployment & Production Readiness
+- **Status**: 📋 Planned
 - **Azure Container Apps** deployment for FastAPI services
-- **Azure MLflow Model Registry** integration
+- **MLflow Model Registry** integration (moved from Phase 6)
 - **Production Feast feature store** with Azure Redis
 - **Production monitoring** and health checks
 - **Azure Application Insights** integration
 - **Production API endpoints** with load balancing
 - **Environment configuration** and secrets management
+- **Note**: MLflow integration moved here to prioritize frontend development
 
 ### Phase 9: Production Monitoring & Drift Detection
 - **Feature distribution drift** monitoring (KS-test, PSI)
@@ -149,7 +158,7 @@ graph TD
   A[User] -->|clicks/views| B[Kafka]
   B --> C[Flink stream processor]
   C --> D[Feast (Local Redis)]
-  E[ALS/Faiss Training] --> F[Local MLflow]
+  E[ALS/Faiss Training] --> F[Local Models]
   G[LightGBM + ONNX] --> F
   H[FastAPI Local] --> D
   H --> F
@@ -160,6 +169,12 @@ graph TD
   K --> N[Azure Redis + Feast]
   O[Monitoring] --> P[Azure Monitor]
   O --> Q[Prometheus + Grafana]
+  
+  %% Current Status
+  F -.->|"✅ Complete"| F
+  H -.->|"✅ Complete"| H
+  J -.->|"🚀 Ready to Start"| J
+  M -.->|"📋 Phase 8"| M
 ```
 
 ## 💸 Cost Estimate (Deployment Only)
@@ -182,9 +197,9 @@ graph TD
 | 3 | ✅ Complete | Retrieval/Candidate Generation |
 | 4 | ✅ Complete | Ranking |
 | 5 | ✅ Complete | Similarity Layer |
-| 6 | 🔄 In Progress | Serving Layer & API (Local Development) |
-| 7 | ⏳ Pending | Frontend (Local Development) |
-| 8 | ⏳ Pending | Online Deployment & Production Readiness |
+| 6 | ✅ Complete | Serving Layer & API (Local Development) |
+| 7 | 🚀 Ready to Start | Frontend (Local Development) |
+| 8 | 📋 Planned | Online Deployment & Production Readiness |
 | 9 | ⏳ Pending | Production Monitoring & Drift Detection |
 | 10 | ⏳ Pending | Frontend Deployment & Infrastructure |
 
