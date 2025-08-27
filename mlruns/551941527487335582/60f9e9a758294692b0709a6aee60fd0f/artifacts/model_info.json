@@ -1,0 +1,44 @@
+{
+  "model_type": "OptimizedALSModel",
+  "model_path": "models/phase3/als_model.pkl",
+  "model_size_mb": 4.280652046203613,
+  "visualizations_created": [
+    "training_loss",
+    "factor_analysis",
+    "training_summary",
+    "training_metrics"
+  ],
+  "training_summary": {
+    "final_loss": 4197.87098718005,
+    "total_time": 45.79072165489197,
+    "avg_iteration_time": 9.158144330978393,
+    "n_iterations": 5,
+    "loss_improvement": 114.38415469598385,
+    "improvement_percentage": 2.652536803428133
+  },
+  "model_architecture": {
+    "n_users": 10000,
+    "n_items": 50,
+    "n_factors": 50,
+    "user_factors_shape": [
+      10000,
+      50
+    ],
+    "item_factors_shape": [
+      1000,
+      50
+    ],
+    "user_biases_shape": [
+      10000
+    ],
+    "item_biases_shape": [
+      1000
+    ]
+  },
+  "training_metadata": {
+    "start_time": "2025-08-27 14:08:58",
+    "total_training_time": 45.79072165489197,
+    "convergence_stable": false,
+    "final_loss_stable": 40.38098953754865
+  }
+}

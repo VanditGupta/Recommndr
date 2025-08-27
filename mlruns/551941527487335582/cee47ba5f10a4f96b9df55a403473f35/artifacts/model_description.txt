@@ -1,0 +1,1 @@
+OptimizedALSModel trained on 10,000 users and 1,000 items with 80 factors. Final loss: 3389.2046

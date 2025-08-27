@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582/cee47ba5f10a4f96b9df55a403473f35/artifacts
+end_time: 1756317785072
+entry_point_name: ''
+experiment_id: '551941527487335582'
+lifecycle_stage: active
+run_id: cee47ba5f10a4f96b9df55a403473f35
+run_name: als_80f_10i_0.1r
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756317714085
+status: 3
+tags: []
+user_id: vanditgupta

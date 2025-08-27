@@ -88,7 +88,7 @@ stages:
       nfiles: 6
     - path: src/processing
       hash: md5
-      md5: ac1a24fa9585ba29839740f4e064e38c.dir
+      md5: 93f1472d0363af98473ccdd570c35b3d.dir
       size: 113877
       nfiles: 12
     - path: src/utils
@@ -99,8 +99,8 @@ stages:
     outs:
     - path: data/features
       hash: md5
-      md5: f419f10e7dcd2a5a2a16c006a74f2b24.dir
-      size: 6163438
+      md5: 868052cf0a00f99347494ae50b136ce6.dir
+      size: 6164742
       nfiles: 3
     - path: data/processed/item_mapping.pkl
       hash: md5

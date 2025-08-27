@@ -1,0 +1,50 @@
+{
+  "model_info": {
+    "n_users": 10000,
+    "n_items": 1000,
+    "n_factors": 50,
+    "n_iterations": 5
+  },
+  "training_metrics": {
+    "initial_loss": 4312.255141876034,
+    "final_loss": 4197.87098718005,
+    "total_improvement": 114.38415469598385,
+    "improvement_percentage": 2.652536803428133,
+    "convergence_stable": false
+  },
+  "factor_statistics": {
+    "user_factors": {
+      "mean": -0.000426380200271328,
+      "std": 0.28801887813145216,
+      "min": -3.4777631887725264,
+      "max": 3.555259515765633
+    },
+    "item_factors": {
+      "mean": -0.000251543907339998,
+      "std": 0.10011771190244945,
+      "min": -0.42272317795757774,
+      "max": 0.41703434572244125
+    }
+  },
+  "bias_statistics": {
+    "global_bias": 0.0,
+    "user_biases": {
+      "mean": 0.10513032516264002,
+      "std": 0.24758490052569276,
+      "min": 0.0,
+      "max": 1.3480822129792802
+    },
+    "item_biases": {
+      "mean": 0.008428394918213886,
+      "std": 0.008025057669831852,
+      "min": -0.0225909934294799,
+      "max": 0.07832379411498513
+    }
+  },
+  "timing_metrics": {
+    "total_training_time": 45.79072165489197,
+    "average_iteration_time": 9.158144330978393,
+    "fastest_iteration": 4.9441328048706055,
+    "slowest_iteration": 11.152469158172607
+  }
+}

@@ -1,0 +1,6 @@
+artifact_location: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/551941527487335582
+creation_time: 1756317624770
+experiment_id: '551941527487335582'
+last_update_time: 1756317624770
+lifecycle_stage: active
+name: als_training

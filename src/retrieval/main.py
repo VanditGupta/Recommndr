@@ -138,18 +138,13 @@ class CandidateGenerationPipeline:
             item_ids = np.array(list(self.item_mapping.keys()))
             
             # Initialize Faiss search
-            self.faiss_search = FaissSimilaritySearch(
-                index_type=index_type,
-                n_lists=min(n_lists, len(item_embeddings) // 10),  # Ensure n_lists < n_items
-                metric=metric
-            )
+            self.faiss_search = FaissSimilaritySearch(use_faiss=True)
             
             # Build the index
             start_time = time.time()
             self.faiss_search.build_index(
-                vectors=item_embeddings,
-                item_ids=item_ids,
-                item_metadata=self.item_features
+                item_embeddings=item_embeddings,
+                item_ids=item_ids
             )
             build_time = time.time() - start_time
             

@@ -75,11 +75,7 @@ def process_data(
         logger.info("Step 3: Transforming data...")
         transformed_data = transform_data(feature_data, transformer)
         
-        # Step 4: Build User-Item Matrix for Phase 3
-        logger.info("Step 4: Building user-item matrix for Phase 3...")
-        matrix_data = build_matrix_for_phase3(cleaned_data, output_dir)
-        
-        # Save processed data if requested
+        # Save processed data if requested (BEFORE building matrix)
         if save_processed:
             logger.info("Saving processed data...")
             save_processed_data(cleaned_data, output_dir)
@@ -87,6 +83,10 @@ def process_data(
         if save_features:
             logger.info("Saving feature data...")
             save_feature_data(feature_data, output_dir)
+        
+        # Step 4: Build User-Item Matrix for Phase 3 (AFTER saving cleaned data)
+        logger.info("Step 4: Building user-item matrix for Phase 3...")
+        matrix_data = build_matrix_for_phase3(cleaned_data, output_dir)
         
         # Log processing statistics
         processing_stats = {
