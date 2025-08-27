@@ -8,6 +8,7 @@ from datetime import datetime
 from src.streaming.kafka_producer import KafkaEventProducer
 from src.streaming.kafka_consumer import KafkaEventConsumer
 from src.streaming.flink_processor import FlinkStreamProcessor
+from src.streaming.kafka_manager import KafkaTopicManager, get_default_topics
 from src.features.feast_integration import FeastFeatureStore
 from src.streaming.clickstream_simulator import ClickstreamSimulator
 from src.utils.logging import get_logger
@@ -172,16 +173,32 @@ class Phase2Pipeline:
     
     def _ensure_kafka_topics(self) -> None:
         """Ensure required Kafka topics exist."""
-        # In a real implementation, this would create topics
-        # For now, we'll just log the expected topics
-        required_topics = [
-            'clickstream-events',
-            'processed-events',
-            'user-features',
-            'product-features'
-        ]
-        
-        logger.info(f"Required Kafka topics: {required_topics}")
+        try:
+            # Create topic manager
+            topic_manager = KafkaTopicManager(
+                bootstrap_servers=self.config.get('kafka_bootstrap_servers', 'localhost:9092')
+            )
+            
+            # Get default topics
+            required_topics = get_default_topics()
+            
+            # Create topics
+            success = topic_manager.create_topics(required_topics)
+            if success:
+                logger.info("✅ Kafka topics created/verified successfully")
+            else:
+                logger.warning("⚠️ Some Kafka topics may not be available")
+            
+            # List existing topics
+            existing_topics = topic_manager.list_topics()
+            logger.info(f"📋 Available Kafka topics: {existing_topics}")
+            
+            # Close topic manager
+            topic_manager.close()
+            
+        except Exception as e:
+            logger.error(f"Failed to ensure Kafka topics: {e}")
+            logger.warning("⚠️ Pipeline will continue but may have topic issues")
     
     def _process_pipeline_iteration(self, events_per_second: int) -> None:
         """Process one iteration of the pipeline.
@@ -197,7 +214,7 @@ class Phase2Pipeline:
             # Send events to Kafka
             for event in events:
                 # Convert Pydantic model to dictionary
-                event_dict = event.dict()
+                event_dict = event.model_dump()
                 success = self.kafka_producer.send_event('clickstream-events', event_dict)
                 if not success:
                     self.pipeline_stats["errors"] += 1
@@ -207,7 +224,7 @@ class Phase2Pipeline:
             for event in events:
                 try:
                     # Convert Pydantic model to dictionary for processing
-                    event_dict = event.dict()
+                    event_dict = event.model_dump()
                     processed_event = self.flink_processor.process_event(event_dict)
                     processed_events.append(processed_event)
                     self.pipeline_stats["events_processed"] += 1

@@ -80,9 +80,12 @@ class FeastFeatureStore:
         try:
             key = f"user_features:{user_id}"
             
+            # Clean features for JSON serialization
+            clean_features = self._clean_features_for_storage(features)
+            
             # Add metadata
             features_with_metadata = {
-                **features,
+                **clean_features,
                 "stored_at": datetime.now().isoformat(),
                 "ttl_seconds": ttl_seconds
             }
@@ -123,9 +126,12 @@ class FeastFeatureStore:
         try:
             key = f"product_features:{product_id}"
             
+            # Clean features for JSON serialization
+            clean_features = self._clean_features_for_storage(features)
+            
             # Add metadata
             features_with_metadata = {
-                **features,
+                **clean_features,
                 "stored_at": datetime.now().isoformat(),
                 "ttl_seconds": ttl_seconds
             }
@@ -151,6 +157,39 @@ class FeastFeatureStore:
         except Exception as e:
             logger.error(f"Failed to store product features: {e}")
             return False
+    
+    def _clean_features_for_storage(self, features: Dict[str, Any]) -> Dict[str, Any]:
+        """Clean features for JSON serialization.
+        
+        Args:
+            features: Raw features dictionary
+            
+        Returns:
+            Cleaned features dictionary
+        """
+        clean_features = {}
+        
+        for key, value in features.items():
+            if isinstance(value, datetime):
+                # Convert datetime to ISO string
+                clean_features[key] = value.isoformat()
+            elif isinstance(value, (int, float, str, bool, type(None))):
+                # Keep primitive types as-is
+                clean_features[key] = value
+            elif isinstance(value, (list, tuple)):
+                # Clean list/tuple items
+                clean_features[key] = [
+                    item.isoformat() if isinstance(item, datetime) else item
+                    for item in value
+                ]
+            elif isinstance(value, dict):
+                # Recursively clean nested dictionaries
+                clean_features[key] = self._clean_features_for_storage(value)
+            else:
+                # Convert other types to string
+                clean_features[key] = str(value)
+        
+        return clean_features
     
     def get_user_features(self, user_id: Union[str, int]) -> Optional[Dict[str, Any]]:
         """Get user features from the feature store.
