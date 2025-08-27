@@ -1,0 +1,10 @@
+{
+  "shape": [
+    10000,
+    1000
+  ],
+  "nnz": 99521,
+  "sparsity": 0.9900479,
+  "dtype": "float64",
+  "format": "csr"
+}
