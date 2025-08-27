@@ -99,9 +99,9 @@ class ClickstreamSimulator:
             session_id: Session ID
             
         Returns:
-            ClickstreamEvent
+            ClickstreamEvent object
         """
-        # Determine event type based on probabilities
+        # Random event type based on probabilities
         event_type = random.choices(
             list(self.event_probabilities.keys()),
             weights=list(self.event_probabilities.values())
@@ -109,10 +109,12 @@ class ClickstreamSimulator:
         
         # Generate timestamp (within last hour)
         timestamp = datetime.now() - timedelta(
-            seconds=random.randint(0, 3600)
+            hours=random.uniform(0, 1),
+            minutes=random.uniform(0, 60),
+            seconds=random.uniform(0, 60)
         )
         
-        # Generate realistic dwell time and scroll depth for certain events
+        # Generate realistic dwell time and scroll depth
         dwell_time = None
         scroll_depth = None
         
@@ -120,7 +122,29 @@ class ClickstreamSimulator:
             dwell_time = random.randint(5, 300)  # 5 seconds to 5 minutes
             scroll_depth = random.randint(10, 100)  # 10% to 100%
         
-        # Generate event
+        # Random page URL
+        page_url = random.choice(self.page_urls)
+        
+        # Random user agent
+        user_agent = random.choice(self.user_agents)
+        
+        # Random IP address
+        ip_base = random.choice(self.ip_ranges)
+        ip_suffix = random.randint(1, 254)
+        ip_address = f"{ip_base}{ip_suffix}"
+        
+        # Random location
+        locations = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+        location = random.choice(locations)
+        
+        # Device type based on user agent
+        device_type = "desktop"
+        if "iPhone" in user_agent or "Android" in user_agent:
+            device_type = "mobile"
+        elif "iPad" in user_agent:
+            device_type = "tablet"
+        
+        # Create event
         event = ClickstreamEvent(
             event_id=f"event_{int(time.time() * 1000)}_{random.randint(1000, 9999)}",
             user_id=user_id,
@@ -128,17 +152,40 @@ class ClickstreamSimulator:
             event_type=event_type,
             timestamp=timestamp,
             session_id=session_id,
-            page_url=random.choice(self.page_urls),
-            referrer_url=random.choice(self.page_urls) if random.random() > 0.3 else None,
-            user_agent=random.choice(self.user_agents),
-            ip_address=f"{random.choice(self.ip_ranges)}{random.randint(1, 254)}",
+            page_url=page_url,
+            referrer_url=random.choice(self.page_urls) if random.random() > 0.5 else None,
+            user_agent=user_agent,
+            ip_address=ip_address,
             dwell_time=dwell_time,
             scroll_depth=scroll_depth,
-            device_type=random.choice(["mobile", "desktop", "tablet"]),
-            location=random.choice(["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"])
+            device_type=device_type,
+            location=location
         )
         
         return event
+    
+    def generate_events(self, num_events: int) -> List[ClickstreamEvent]:
+        """Generate multiple clickstream events.
+        
+        Args:
+            num_events: Number of events to generate
+            
+        Returns:
+            List of ClickstreamEvent objects
+        """
+        events = []
+        
+        for _ in range(num_events):
+            # Generate random user and product IDs
+            user_id = random.randint(1, 10000)
+            product_id = random.randint(1, 1000)
+            session_id = f"session_{random.randint(1000, 9999)}"
+            
+            # Generate event
+            event = self.generate_event(user_id, product_id, session_id)
+            events.append(event)
+        
+        return events
     
     def send_event(self, event: ClickstreamEvent, topic: str = "clickstream-events") -> None:
         """Send event to Kafka topic.

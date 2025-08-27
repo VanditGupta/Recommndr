@@ -1,12 +1,15 @@
-"""Streaming pipeline for Phase 2."""
+"""Streaming module for Phase 2: Streaming Ingestion & Feature Pipeline."""
 
-__version__ = "0.1.0"
-__author__ = "Recommndr Team"
-__email__ = "team@recommndr.com"
+from .clickstream_simulator import ClickstreamSimulator
+from .kafka_producer import KafkaEventProducer
+from .kafka_consumer import KafkaEventConsumer
+from .flink_processor import FlinkStreamProcessor
+from .main import Phase2Pipeline
 
 __all__ = [
-    "kafka_producer",
-    "kafka_consumer", 
-    "flink_processor",
-    "clickstream_simulator"
+    "ClickstreamSimulator",
+    "KafkaEventProducer", 
+    "KafkaEventConsumer",
+    "FlinkStreamProcessor",
+    "Phase2Pipeline"
 ]
