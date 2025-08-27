@@ -190,16 +190,19 @@ class UserGenerator:
         return random.choice(main_categories)
     
     def generate_users(self, num_users: int) -> List[User]:
-        """Generate synthetic users with cold-start scenarios."""
+        """Generate synthetic user data with cold-start scenarios."""
         users = []
         
-        # Define user types for cold-start scenarios
+        # User type distribution for realistic cold-start scenarios
         user_types = {
-            'new_user': 0.15,      # 15% new users (registered < 30 days)
-            'active_user': 0.60,    # 60% active users (regular activity)
+            'new_user': 0.35,      # 35% new users (created in last 30 days)
+            'active_user': 0.40,    # 40% active users (regular activity)
             'power_user': 0.20,     # 20% power users (high activity)
             'inactive_user': 0.05   # 5% inactive users (no activity > 90 days)
         }
+        
+        # Track used emails to ensure uniqueness
+        used_emails = set()
         
         for i in range(num_users):
             # Determine user type based on weights
@@ -224,6 +227,12 @@ class UserGenerator:
                 created_at = fake.date_time_between(start_date='-2y', end_date='-1y')
                 last_active = fake.date_time_between(start_date='-90d', end_date='-60d')
             
+            # Generate unique email
+            email = fake.email()
+            while email in used_emails:
+                email = fake.email()
+            used_emails.add(email)
+            
             # Create user
             user = User(
                 user_id=self.user_id_counter,
@@ -235,7 +244,7 @@ class UserGenerator:
                 device_type=random.choice(self.devices),
                 language_preference=random.choice(self.languages),
                 timezone=random.choice(self.timezones),
-                email=fake.email(),
+                email=email,
                 created_at=created_at,
                 last_active=last_active
             )
@@ -564,6 +573,12 @@ class InteractionGenerator:
             elif interaction_type == "view":
                 dwell_time = random.randint(5, 300)  # 5 seconds to 5 minutes
                 scroll_depth = random.randint(10, 100)  # 10% to 100%
+            
+            # Ensure all numeric fields have valid values for validation
+            if dwell_time is None:
+                dwell_time = random.randint(5, 300)
+            if scroll_depth is None:
+                scroll_depth = random.randint(10, 100)
             
             # Create interaction
             interaction = Interaction(
