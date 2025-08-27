@@ -161,6 +161,8 @@ git commit -m "Update data version"
 dvc push
 ```
 
+**📚 For detailed DVC Azure operations, see [DVC Azure Operations Guide](#-dvc-azure-operations-guide) above**
+
 ## 📈 Monitoring & Quality
 
 - **Data Quality**: Great Expectations validation reports (88.75% overall score)
@@ -175,6 +177,115 @@ dvc push
 - **Container**: `data/recommndr-dvc/`
 - **Authentication**: Storage account key + "Storage Blob Data Contributor" role
 - **DVC Remote**: `azure://data/recommndr-dvc/`
+
+### 🚀 DVC Azure Operations Guide
+
+#### **1. Push Data to Azure Cloud Storage**
+```bash
+# Push all DVC data to Azure
+dvc push
+
+# Push specific stage to Azure
+dvc push data_generation
+dvc push data_validation
+dvc push data_processing
+
+# Push with specific remote
+dvc push --remote azure
+```
+
+#### **2. Pull Data from Azure Cloud Storage**
+```bash
+# Pull all data from Azure
+dvc pull
+
+# Pull specific stage from Azure
+dvc pull data_generation
+
+# Pull with specific remote
+dvc pull --remote azure
+```
+
+#### **3. Check Azure Sync Status**
+```bash
+# Check if local/remote are in sync
+dvc status
+
+# Check Azure remote status specifically
+dvc status --remote azure
+
+# List all DVC stages
+dvc stage list
+```
+
+#### **4. View Azure Storage Contents**
+```bash
+# List all files in Azure DVC container
+az storage blob list \
+  --account-name recommndrstorage \
+  --container-name data \
+  --prefix recommndr-dvc/ \
+  --output table
+
+# Get specific file info
+az storage blob show \
+  --account-name recommndrstorage \
+  --container-name data \
+  --name "recommndr-dvc/files/md5/44/d91d9eb7ff94f3739eb2c3ff0a71d8"
+```
+
+#### **5. DVC Pipeline with Azure**
+```bash
+# Run full pipeline and push to Azure
+dvc repro
+dvc push
+
+# Run specific stage and push
+dvc repro data_generation
+dvc push data_generation
+
+# Check pipeline health
+dvc status
+dvc stage list
+```
+
+#### **6. Team Collaboration with Azure**
+```bash
+# Clone repository and pull data from Azure
+git clone <your-repo>
+cd Recommndr
+dvc pull
+
+# Update data and push to Azure
+dvc repro
+dvc push
+git add dvc.lock
+git commit -m "Update data version"
+git push
+```
+
+#### **7. Azure Storage Details**
+- **Total Files**: 32+ files (data + metadata)
+- **Data Size**: ~15+ MB
+- **Storage Tier**: Hot (frequently accessed)
+- **Backup**: Automatic Azure redundancy
+- **Security**: RBAC + Storage account keys
+
+#### **8. Troubleshooting Azure DVC Issues**
+```bash
+# Check DVC remote configuration
+dvc remote list
+dvc remote show azure
+
+# Verify Azure credentials
+az storage account keys list \
+  --account-name recommndrstorage \
+  --resource-group recommndr-rg
+
+# Test Azure connectivity
+az storage container list \
+  --account-name recommndrstorage
+```
 
 ### Azure Deployment
 ```bash
