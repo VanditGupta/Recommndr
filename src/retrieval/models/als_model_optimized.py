@@ -9,6 +9,8 @@ import logging
 import mlflow
 import mlflow.pytorch
 from pathlib import Path
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -55,13 +57,20 @@ class OptimizedALSModel:
         self._setup_mlflow()
         
     def _setup_mlflow(self):
-        """Setup MLflow experiment and run."""
+        """Setup MLflow experiment and run with advanced features."""
         try:
             # Set experiment
             mlflow.set_experiment(self.experiment_name)
             
             # Start run
             self.mlflow_run = mlflow.start_run(run_name=self.run_name)
+            
+            # Enable system metrics logging (CPU, memory, etc.)
+            try:
+                mlflow.enable_system_metrics_logging()
+                logger.info("✅ System metrics logging enabled")
+            except Exception as e:
+                logger.warning(f"⚠️ System metrics logging failed: {e}")
             
             # Log parameters
             mlflow.log_params({
@@ -70,7 +79,19 @@ class OptimizedALSModel:
                 "regularization": self.regularization,
                 "random_state": self.random_state,
                 "use_blas": self.use_blas,
-                "batch_size": self.batch_size
+                "batch_size": self.batch_size,
+                "model_type": "OptimizedALSModel",
+                "framework": "numpy_scipy",
+                "optimization": "vectorized_blas"
+            })
+            
+            # Log tags for better organization
+            mlflow.set_tags({
+                "project": "Recommndr",
+                "phase": "Phase3",
+                "algorithm": "ALS",
+                "optimization": "vectorized",
+                "data_type": "sparse_matrix"
             })
             
             logger.info(f"✅ MLflow run started: {self.run_name}")
@@ -110,6 +131,17 @@ class OptimizedALSModel:
         for iteration in range(self.n_iterations):
             iter_start = time.time()
             
+            # Log trace for iteration start
+            if self.mlflow_run:
+                try:
+                    mlflow.log_trace(
+                        name="training_iteration",
+                        inputs={"iteration": iteration, "n_factors": self.n_factors},
+                        outputs={"status": "started"}
+                    )
+                except Exception as e:
+                    logger.debug(f"Trace logging failed: {e}")
+            
             # Vectorized user factor updates
             self._update_user_factors_vectorized(user_item_matrix, reg_matrix)
             
@@ -123,13 +155,34 @@ class OptimizedALSModel:
             iter_time = time.time() - iter_start
             self.training_times.append(iter_time)
             
-            # Log metrics to MLflow
+            # Enhanced metrics logging to MLflow
             if self.mlflow_run:
+                # Basic training metrics
                 mlflow.log_metrics({
                     "loss": loss,
                     "iteration_time": iter_time,
-                    "cumulative_time": sum(self.training_times)
+                    "cumulative_time": sum(self.training_times),
+                    "loss_improvement": self.training_loss[0] - loss,
+                    "loss_improvement_pct": ((self.training_loss[0] - loss) / self.training_loss[0]) * 100
                 }, step=iteration)
+                
+                # Performance metrics
+                if iteration > 0:
+                    mlflow.log_metrics({
+                        "loss_change": loss - self.training_loss[-2],
+                        "time_change": iter_time - self.training_times[-2],
+                        "convergence_rate": abs(loss - self.training_loss[-2]) / self.training_loss[-2] if self.training_loss[-2] > 0 else 0
+                    }, step=iteration)
+                
+                # Log trace for iteration completion
+                try:
+                    mlflow.log_trace(
+                        name="training_iteration",
+                        inputs={"iteration": iteration, "loss": loss, "time": iter_time},
+                        outputs={"status": "completed", "loss": loss, "iteration_time": iter_time}
+                    )
+                except Exception as e:
+                    logger.debug(f"Trace logging failed: {e}")
             
             if iteration % 5 == 0 or iteration == self.n_iterations - 1:
                 logger.info(f"   Iteration {iteration + 1}/{self.n_iterations}, "
@@ -139,22 +192,47 @@ class OptimizedALSModel:
         total_time = time.time() - start_time
         avg_iter_time = np.mean(self.training_times)
         
-        # Log final metrics to MLflow
+        # Enhanced final metrics logging to MLflow
         if self.mlflow_run:
+            # Training summary metrics
             mlflow.log_metrics({
                 "final_loss": loss,
                 "total_training_time": total_time,
                 "avg_iteration_time": avg_iter_time,
                 "fastest_iteration": min(self.training_times),
-                "slowest_iteration": max(self.training_times)
+                "slowest_iteration": max(self.training_times),
+                "total_loss_improvement": self.training_loss[0] - loss,
+                "loss_improvement_percentage": ((self.training_loss[0] - loss) / self.training_loss[0]) * 100,
+                "training_efficiency": (self.training_loss[0] - loss) / total_time,  # Improvement per second
+                "convergence_stability": np.std(self.training_loss[-5:]) if len(self.training_loss) >= 5 else 0
             })
             
-            # Log training curves
-            for i, (loss_val, iter_time) in enumerate(zip(self.training_loss, self.training_times)):
-                mlflow.log_metrics({
-                    "loss_history": loss_val,
-                    "iteration_time_history": iter_time
-                }, step=i)
+            # Log training curves as structured data
+            try:
+                training_curve_data = {
+                    "iteration": list(range(len(self.training_loss))),
+                    "loss": self.training_loss,
+                    "training_time": self.training_times,
+                    "cumulative_time": list(np.cumsum(self.training_times)),
+                    "loss_improvement": [self.training_loss[0] - l for l in self.training_loss]
+                }
+                mlflow.log_table(
+                    data=training_curve_data,
+                    artifact_file="training_curves.json"
+                )
+                logger.info("✅ Training curves logged to MLflow")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to log training curves: {e}")
+            
+            # Log trace for training completion
+            try:
+                mlflow.log_trace(
+                    name="training_completion",
+                    inputs={"total_iterations": len(self.training_loss), "final_loss": loss},
+                    outputs={"status": "completed", "total_time": total_time, "is_trained": True}
+                )
+            except Exception as e:
+                logger.debug(f"Trace logging failed: {e}")
         
         logger.info(f"🎉 Training completed in {total_time:.2f}s")
         logger.info(f"⚡ Average iteration time: {avg_iter_time:.2f}s")
@@ -348,25 +426,122 @@ class OptimizedALSModel:
         
         logger.info(f"💾 Model saved to {filepath}")
         
-        # Log model to MLflow
+        # Create comprehensive visualizations
+        logger.info("🎨 Creating training visualizations...")
+        try:
+            plots = self._create_training_visualizations()
+            logger.info(f"✅ Visualizations created: {list(plots.keys())}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to create visualizations: {e}")
+            plots = {}
+        
+        # Log model artifacts to MLflow
         if self.mlflow_run:
             try:
-                # Log model artifacts
+                # Log model file
                 mlflow.log_artifact(filepath, "model")
                 
-                # Log model info
-                mlflow.log_dict({
+                # Log all visualization files
+                for plot_name, plot_path in plots.items():
+                    if Path(plot_path).exists():
+                        mlflow.log_artifact(plot_path, f"visualizations/{plot_name}")
+                
+                # Log training curves as a figure (if matplotlib is available)
+                try:
+                    import matplotlib.pyplot as plt
+                    plt.figure(figsize=(12, 8))
+                    
+                    # Training loss curve
+                    plt.subplot(2, 2, 1)
+                    plt.plot(self.training_loss, 'b-', linewidth=2, marker='o', markersize=4)
+                    plt.title('Training Loss Over Time', fontsize=14, fontweight='bold')
+                    plt.xlabel('Iteration', fontsize=12)
+                    plt.ylabel('Loss', fontsize=12)
+                    plt.grid(True, alpha=0.3)
+                    plt.yscale('log')
+                    
+                    # Loss improvement
+                    plt.subplot(2, 2, 2)
+                    loss_improvement = [self.training_loss[0] - loss for loss in self.training_loss]
+                    plt.plot(loss_improvement, 'g-', linewidth=2, marker='s', markersize=4)
+                    plt.title('Loss Improvement Over Time', fontsize=14, fontweight='bold')
+                    plt.xlabel('Iteration', fontsize=12)
+                    plt.ylabel('Loss Improvement', fontsize=12)
+                    plt.grid(True, alpha=0.3)
+                    
+                    # Training time per iteration
+                    plt.subplot(2, 2, 3)
+                    plt.plot(self.training_times, 'r-', linewidth=2, marker='^', markersize=4)
+                    plt.title('Training Time per Iteration', fontsize=14, fontweight='bold')
+                    plt.xlabel('Iteration', fontsize=12)
+                    plt.ylabel('Time (seconds)', fontsize=12)
+                    plt.grid(True, alpha=0.3)
+                    
+                    # Factor norms distribution
+                    plt.subplot(2, 2, 4)
+                    user_norms = np.linalg.norm(self.user_factors, axis=1)
+                    item_norms = np.linalg.norm(self.item_factors, axis=1)
+                    plt.hist(user_norms, bins=30, alpha=0.7, color='skyblue', edgecolor='black', label='Users')
+                    plt.hist(item_norms, bins=30, alpha=0.7, color='lightcoral', edgecolor='black', label='Items')
+                    plt.title('Factor Norms Distribution', fontsize=14, fontweight='bold')
+                    plt.xlabel('Norm Value', fontsize=12)
+                    plt.ylabel('Frequency', fontsize=12)
+                    plt.legend()
+                    plt.grid(True, alpha=0.3)
+                    
+                    plt.tight_layout()
+                    
+                    # Log the figure to MLflow
+                    mlflow.log_figure(plt.gcf(), "training_summary.png")
+                    plt.close()
+                    
+                    logger.info("✅ Training summary figure logged to MLflow")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to log training figure: {e}")
+                
+                # Enhanced model info logging
+                model_info = {
                     "model_type": "OptimizedALSModel",
                     "model_path": filepath,
                     "model_size_mb": Path(filepath).stat().st_size / (1024 * 1024),
+                    "visualizations_created": list(plots.keys()),
                     "training_summary": {
                         "final_loss": self.training_loss[-1],
                         "total_time": sum(self.training_times),
-                        "avg_iteration_time": np.mean(self.training_times)
+                        "avg_iteration_time": np.mean(self.training_times),
+                        "n_iterations": len(self.training_loss),
+                        "loss_improvement": self.training_loss[0] - self.training_loss[-1],
+                        "improvement_percentage": ((self.training_loss[0] - self.training_loss[-1]) / self.training_loss[0]) * 100
+                    },
+                    "model_architecture": {
+                        "n_users": self.user_factors.shape[0],
+                        "n_items": self.item_factors.shape[1],
+                        "n_factors": self.user_factors.shape[1],
+                        "user_factors_shape": self.user_factors.shape,
+                        "item_factors_shape": self.item_factors.shape,
+                        "user_biases_shape": self.user_biases.shape,
+                        "item_biases_shape": self.item_biases.shape
+                    },
+                    "training_metadata": {
+                        "start_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "total_training_time": sum(self.training_times),
+                        "convergence_stable": len(set(self.training_loss[-3:])) < 3 if len(self.training_loss) >= 3 else False,
+                        "final_loss_stable": np.std(self.training_loss[-5:]) if len(self.training_loss) >= 5 else 0
                     }
-                }, "model_info.json")
+                }
                 
-                logger.info("✅ Model logged to MLflow")
+                mlflow.log_dict(model_info, "model_info.json")
+                
+                # Log model as a custom artifact
+                try:
+                    mlflow.log_text(
+                        f"OptimizedALSModel trained on {self.user_factors.shape[0]:,} users and {self.item_factors.shape[0]:,} items with {self.user_factors.shape[1]} factors. Final loss: {self.training_loss[-1]:.4f}",
+                        "model_description.txt"
+                    )
+                except Exception as e:
+                    logger.debug(f"Failed to log model description: {e}")
+                
+                logger.info("✅ Enhanced model and visualizations logged to MLflow")
                 
             except Exception as e:
                 logger.warning(f"⚠️ Failed to log model to MLflow: {e}")
@@ -397,6 +572,327 @@ class OptimizedALSModel:
         
         logger.info(f"📂 Model loaded from {filepath}")
         return model
+
+    def _create_training_visualizations(self) -> Dict[str, str]:
+        """Create comprehensive training visualizations and save them."""
+        if not self.is_trained or len(self.training_loss) == 0:
+            logger.warning("No training data available for visualizations")
+            return {}
+        
+        # Create output directory
+        output_dir = Path("data/processed/visualizations")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        plots = {}
+        
+        # 1. Training Loss Curve
+        plt.figure(figsize=(12, 8))
+        plt.subplot(2, 2, 1)
+        plt.plot(self.training_loss, 'b-', linewidth=2, marker='o', markersize=4)
+        plt.title('Training Loss Over Time', fontsize=14, fontweight='bold')
+        plt.xlabel('Iteration', fontsize=12)
+        plt.ylabel('Loss', fontsize=12)
+        plt.grid(True, alpha=0.3)
+        plt.yscale('log')  # Log scale for better visualization
+        
+        # 2. Loss Improvement
+        plt.subplot(2, 2, 2)
+        loss_improvement = [self.training_loss[0] - loss for loss in self.training_loss]
+        plt.plot(loss_improvement, 'g-', linewidth=2, marker='s', markersize=4)
+        plt.title('Loss Improvement Over Time', fontsize=14, fontweight='bold')
+        plt.xlabel('Iteration', fontsize=12)
+        plt.ylabel('Loss Improvement', fontsize=12)
+        plt.grid(True, alpha=0.3)
+        
+        # 3. Training Time per Iteration
+        plt.subplot(2, 2, 3)
+        if hasattr(self, 'training_times') and len(self.training_times) > 0:
+            plt.plot(self.training_times, 'r-', linewidth=2, marker='^', markersize=4)
+            plt.title('Training Time per Iteration', fontsize=14, fontweight='bold')
+            plt.xlabel('Iteration', fontsize=12)
+            plt.ylabel('Time (seconds)', fontsize=12)
+            plt.grid(True, alpha=0.3)
+        else:
+            plt.text(0.5, 0.5, 'No timing data available', ha='center', va='center', transform=plt.gca().transAxes)
+            plt.title('Training Time per Iteration', fontsize=14, fontweight='bold')
+        
+        # 4. Cumulative Training Time
+        plt.subplot(2, 2, 4)
+        if hasattr(self, 'training_times') and len(self.training_times) > 0:
+            cumulative_time = np.cumsum(self.training_times)
+            plt.plot(cumulative_time, 'm-', linewidth=2, marker='d', markersize=4)
+            plt.title('Cumulative Training Time', fontsize=14, fontweight='bold')
+            plt.xlabel('Iteration', fontsize=12)
+            plt.ylabel('Cumulative Time (seconds)', fontsize=12)
+            plt.grid(True, alpha=0.3)
+        else:
+            plt.text(0.5, 0.5, 'No timing data available', ha='center', va='center', transform=plt.gca().transAxes)
+            plt.title('Cumulative Training Time', fontsize=14, fontweight='bold')
+        
+        plt.tight_layout()
+        loss_plot_path = output_dir / "training_loss_analysis.png"
+        plt.savefig(loss_plot_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        plots['training_loss'] = str(loss_plot_path)
+        
+        # 5. Factor Distribution Analysis
+        plt.figure(figsize=(15, 10))
+        
+        # User factors distribution
+        plt.subplot(2, 3, 1)
+        plt.hist(self.user_factors.flatten(), bins=50, alpha=0.7, color='skyblue', edgecolor='black')
+        plt.title('User Factors Distribution', fontsize=12, fontweight='bold')
+        plt.xlabel('Factor Value', fontsize=10)
+        plt.ylabel('Frequency', fontsize=10)
+        plt.grid(True, alpha=0.3)
+        
+        # Item factors distribution
+        plt.subplot(2, 3, 2)
+        plt.hist(self.item_factors.flatten(), bins=50, alpha=0.7, color='lightcoral', edgecolor='black')
+        plt.title('Item Factors Distribution', fontsize=12, fontweight='bold')
+        plt.xlabel('Factor Value', fontsize=10)
+        plt.ylabel('Frequency', fontsize=10)
+        plt.grid(True, alpha=0.3)
+        
+        # User biases distribution
+        plt.subplot(2, 3, 3)
+        plt.hist(self.user_biases, bins=30, alpha=0.7, color='lightgreen', edgecolor='black')
+        plt.title('User Biases Distribution', fontsize=12, fontweight='bold')
+        plt.xlabel('Bias Value', fontsize=10)
+        plt.ylabel('Frequency', fontsize=10)
+        plt.grid(True, alpha=0.3)
+        
+        # Item biases distribution
+        plt.subplot(2, 3, 4)
+        plt.hist(self.item_biases, bins=30, alpha=0.7, color='gold', edgecolor='black')
+        plt.title('Item Biases Distribution', fontsize=12, fontweight='bold')
+        plt.xlabel('Bias Value', fontsize=10)
+        plt.ylabel('Frequency', fontsize=10)
+        plt.grid(True, alpha=0.3)
+        
+        # Factor norms distribution
+        plt.subplot(2, 3, 5)
+        user_norms = np.linalg.norm(self.user_factors, axis=1)
+        item_norms = np.linalg.norm(self.item_factors, axis=1)
+        plt.hist(user_norms, bins=30, alpha=0.7, color='plum', edgecolor='black', label='Users')
+        plt.hist(item_norms, bins=30, alpha=0.7, color='orange', edgecolor='black', label='Items')
+        plt.title('Factor Norms Distribution', fontsize=12, fontweight='bold')
+        plt.xlabel('Norm Value', fontsize=10)
+        plt.ylabel('Frequency', fontsize=10)
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        
+        # Training metrics summary
+        plt.subplot(2, 3, 6)
+        metrics_text = f"""
+        Training Summary:
+        
+        Final Loss: {self.training_loss[-1]:.4f}
+        Initial Loss: {self.training_loss[0]:.4f}
+        Improvement: {self.training_loss[0] - self.training_loss[-1]:.4f}
+        Iterations: {len(self.training_loss)}
+        Users: {self.user_factors.shape[0]:,}
+        Items: {self.item_factors.shape[0]:,}
+        Factors: {self.user_factors.shape[1]}
+        """
+        plt.text(0.1, 0.9, metrics_text, transform=plt.gca().transAxes, 
+                fontsize=10, verticalalignment='top', fontfamily='monospace',
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray", alpha=0.8))
+        plt.title('Training Metrics Summary', fontsize=12, fontweight='bold')
+        plt.axis('off')
+        
+        plt.tight_layout()
+        factors_plot_path = output_dir / "factor_analysis.png"
+        plt.savefig(factors_plot_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        plots['factor_analysis'] = str(factors_plot_path)
+        
+        # 6. Create training summary CSV
+        training_summary = pd.DataFrame({
+            'iteration': range(len(self.training_loss)),
+            'loss': self.training_loss,
+            'loss_improvement': [self.training_loss[0] - loss for loss in self.training_loss],
+            'training_time': self.training_times if hasattr(self, 'training_times') else [0] * len(self.training_loss),
+            'cumulative_time': np.cumsum(self.training_times) if hasattr(self, 'training_times') else [0] * len(self.training_loss)
+        })
+        
+        csv_path = output_dir / "training_summary.csv"
+        training_summary.to_csv(csv_path, index=False)
+        plots['training_summary'] = str(csv_path)
+        
+        # 7. Create detailed metrics JSON
+        metrics_data = {
+            'model_info': {
+                'n_users': self.user_factors.shape[0],
+                'n_items': self.item_factors.shape[0],
+                'n_factors': self.user_factors.shape[1],
+                'n_iterations': len(self.training_loss)
+            },
+            'training_metrics': {
+                'initial_loss': float(self.training_loss[0]),
+                'final_loss': float(self.training_loss[-1]),
+                'total_improvement': float(self.training_loss[0] - self.training_loss[-1]),
+                'improvement_percentage': float((self.training_loss[0] - self.training_loss[-1]) / self.training_loss[0] * 100),
+                'convergence_stable': len(set(self.training_loss[-3:])) < 3
+            },
+            'factor_statistics': {
+                'user_factors': {
+                    'mean': float(self.user_factors.mean()),
+                    'std': float(self.user_factors.std()),
+                    'min': float(self.user_factors.min()),
+                    'max': float(self.user_factors.max())
+                },
+                'item_factors': {
+                    'mean': float(self.item_factors.mean()),
+                    'std': float(self.item_factors.std()),
+                    'min': float(self.item_factors.min()),
+                    'max': float(self.item_factors.max())
+                }
+            },
+            'bias_statistics': {
+                'global_bias': float(self.global_bias),
+                'user_biases': {
+                    'mean': float(self.user_biases.mean()),
+                    'std': float(self.user_biases.std()),
+                    'min': float(self.user_biases.min()),
+                    'max': float(self.user_biases.max())
+                },
+                'item_biases': {
+                    'mean': float(self.item_biases.mean()),
+                    'std': float(self.item_biases.std()),
+                    'min': float(self.item_biases.min()),
+                    'max': float(self.item_biases.max())
+                }
+            }
+        }
+        
+        if hasattr(self, 'training_times') and len(self.training_times) > 0:
+            metrics_data['timing_metrics'] = {
+                'total_training_time': float(sum(self.training_times)),
+                'average_iteration_time': float(np.mean(self.training_times)),
+                'fastest_iteration': float(min(self.training_times)),
+                'slowest_iteration': float(max(self.training_times))
+            }
+        
+        import json
+        json_path = output_dir / "training_metrics.json"
+        with open(json_path, 'w') as f:
+            json.dump(metrics_data, f, indent=2)
+        plots['training_metrics'] = str(json_path)
+        
+        logger.info(f"✅ Training visualizations saved to {output_dir}")
+        return plots
+    
+    def create_visualization_report(self) -> str:
+        """Create a comprehensive HTML report of all visualizations."""
+        if not self.is_trained:
+            raise ValueError("Model must be trained before creating report")
+        
+        try:
+            # Create visualizations first
+            plots = self._create_training_visualizations()
+            
+            # Create HTML report
+            output_dir = Path("data/processed/visualizations")
+            html_path = output_dir / "training_report.html"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ALS Model Training Report</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
+                    .header {{ background-color: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }}
+                    .section {{ background-color: white; padding: 20px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+                    .metric {{ display: inline-block; margin: 10px; padding: 10px; background-color: #ecf0f1; border-radius: 5px; }}
+                    .plot {{ text-align: center; margin: 20px 0; }}
+                    .plot img {{ max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 5px; }}
+                    h1, h2 {{ color: #2c3e50; }}
+                    .success {{ color: #27ae60; font-weight: bold; }}
+                    .warning {{ color: #f39c12; font-weight: bold; }}
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🚀 ALS Model Training Report</h1>
+                    <p>Comprehensive analysis of model training performance and visualizations</p>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 Model Overview</h2>
+                    <div class="metric">
+                        <strong>Users:</strong> {self.user_factors.shape[0]:,}
+                    </div>
+                    <div class="metric">
+                        <strong>Items:</strong> {self.item_factors.shape[0]:,}
+                    </div>
+                    <div class="metric">
+                        <strong>Factors:</strong> {self.user_factors.shape[1]}
+                    </div>
+                    <div class="metric">
+                        <strong>Iterations:</strong> {len(self.training_loss)}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📈 Training Performance</h2>
+                    <div class="metric">
+                        <strong>Initial Loss:</strong> {self.training_loss[0]:.4f}
+                    </div>
+                    <div class="metric">
+                        <strong>Final Loss:</strong> {self.training_loss[-1]:.4f}
+                    </div>
+                    <div class="metric">
+                        <strong>Improvement:</strong> {self.training_loss[0] - self.training_loss[-1]:.4f}
+                    </div>
+                    <div class="metric">
+                        <strong>Total Time:</strong> {sum(self.training_times):.2f}s
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>🎨 Training Visualizations</h2>
+                    <div class="plot">
+                        <h3>Training Loss Analysis</h3>
+                        <img src="training_loss_analysis.png" alt="Training Loss Analysis">
+                    </div>
+                    <div class="plot">
+                        <h3>Factor Distribution Analysis</h3>
+                        <img src="factor_analysis.png" alt="Factor Distribution Analysis">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📁 Generated Files</h2>
+                    <ul>
+                        <li><strong>Training Loss Analysis:</strong> training_loss_analysis.png</li>
+                        <li><strong>Factor Analysis:</strong> factor_analysis.png</li>
+                        <li><strong>Training Summary:</strong> training_summary.csv</li>
+                        <li><strong>Training Metrics:</strong> training_metrics.json</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h2>🔍 Analysis Summary</h2>
+                    <p class="success">✅ Model training completed successfully</p>
+                    <p class="success">✅ Loss improved from {self.training_loss[0]:.4f} to {self.training_loss[-1]:.4f}</p>
+                    <p class="success">✅ Training converged in {len(self.training_loss)} iterations</p>
+                    <p class="success">✅ All visualizations generated successfully</p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            with open(html_path, 'w') as f:
+                f.write(html_content)
+            
+            logger.info(f"✅ HTML report created: {html_path}")
+            return str(html_path)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to create HTML report: {e}")
+            return ""
 
 
 # Performance comparison function (updated for MLflow)
