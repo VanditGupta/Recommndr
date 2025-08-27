@@ -30,20 +30,20 @@ stages:
       size: 6750
     - path: data/raw/interactions/interactions.parquet
       hash: md5
-      md5: 71f7797a459c66e4210db2a54eb30808
-      size: 3423609
+      md5: 683562e93b46b47133801918bb9f42c4
+      size: 3423795
     - path: data/raw/metadata/generation_metadata.json
       hash: md5
-      md5: e8e92183f62b98ae9654f9dc12ea25ca
+      md5: b1dbdfd74acf4df5992dc77fc5627fd4
       size: 421
     - path: data/raw/products/products.parquet
       hash: md5
-      md5: fc0d36aac745ad31ddac53b586e38066
+      md5: b71f1ed0ae32c631485b11822e86daf0
       size: 81616
     - path: data/raw/users/users.parquet
       hash: md5
-      md5: 5adb8e60863297cf6b22c37f080050f4
-      size: 410650
+      md5: 596f11723609ab2dd02a4cad194269b2
+      size: 408452
   data_validation:
     cmd: python -m src.validation.main --output-report data/validation_report.txt
       --quality-threshold 0.8
@@ -83,13 +83,13 @@ stages:
       nfiles: 5
     - path: data/raw
       hash: md5
-      md5: 8b6a2a266ffe42d7b90e37762c5c351c.dir
-      size: 3929194
+      md5: 03e744f76e9e529c643c3ff8f901a5eb.dir
+      size: 3927182
       nfiles: 6
     - path: src/processing
       hash: md5
-      md5: 93f1472d0363af98473ccdd570c35b3d.dir
-      size: 113877
+      md5: 980cb984ef2b0b3e00e8f611d456a117.dir
+      size: 113930
       nfiles: 12
     - path: src/utils
       hash: md5
@@ -99,8 +99,8 @@ stages:
     outs:
     - path: data/features
       hash: md5
-      md5: 868052cf0a00f99347494ae50b136ce6.dir
-      size: 6164742
+      md5: 34a070b3b4511bf98370ebfe112b33f0.dir
+      size: 6160597
       nfiles: 3
     - path: data/processed/item_mapping.pkl
       hash: md5

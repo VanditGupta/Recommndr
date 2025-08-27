@@ -1,0 +1,6 @@
+artifact_location: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586
+creation_time: 1756320061260
+experiment_id: '621939714189266586'
+last_update_time: 1756320061260
+lifecycle_stage: active
+name: lightgbm_ranking

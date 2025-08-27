@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vanditgupta/Vandit/Github/Projects/Recommndr/mlruns/621939714189266586/a9f0eeced3cf447b9a12d44fb11291ea/artifacts
+end_time: 1756320069550
+entry_point_name: ''
+experiment_id: '621939714189266586'
+lifecycle_stage: active
+run_id: a9f0eeced3cf447b9a12d44fb11291ea
+run_name: upset-ape-479
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756320061690
+status: 3
+tags: []
+user_id: vanditgupta
