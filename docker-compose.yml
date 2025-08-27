@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Main application
   recommndr:
@@ -10,10 +8,6 @@ services:
     container_name: recommndr-app
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
-      - ./data:/app/data
-      - ./logs:/app/logs
     environment:
       - PYTHONPATH=/app
       - LOG_LEVEL=INFO
