@@ -12,6 +12,7 @@ from config.settings import settings, get_data_path, ensure_directories
 from src.processing.cleaners import DataCleaner
 from src.processing.feature_engineering import FeatureEngineer
 from src.processing.transformers import DataTransformer
+from src.processing.matrix_builder import build_user_item_matrix, save_matrix_and_mappings
 from src.utils.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -74,6 +75,10 @@ def process_data(
         logger.info("Step 3: Transforming data...")
         transformed_data = transform_data(feature_data, transformer)
         
+        # Step 4: Build User-Item Matrix for Phase 3
+        logger.info("Step 4: Building user-item matrix for Phase 3...")
+        matrix_data = build_matrix_for_phase3(cleaned_data, output_dir)
+        
         # Save processed data if requested
         if save_processed:
             logger.info("Saving processed data...")
@@ -87,7 +92,8 @@ def process_data(
         processing_stats = {
             'cleaning': cleaner.get_cleaning_stats(),
             'features': feature_engineer.get_feature_stats(),
-            'transformation': transformer.get_transformation_stats()
+            'transformation': transformer.get_transformation_stats(),
+            'matrix': matrix_data.get('stats', {})
         }
         
         duration = time.time() - start_time
@@ -101,6 +107,7 @@ def process_data(
             'cleaned': cleaned_data,
             'features': feature_data,
             'transformed': transformed_data,
+            'matrix': matrix_data,
             'stats': processing_stats
         }
         
@@ -263,6 +270,48 @@ def save_feature_data(feature_data: Dict[str, pd.DataFrame], output_dir: str):
             logger.info(f"Saved {data_type} features to {file_path}")
 
 
+def build_matrix_for_phase3(cleaned_data: Dict[str, pd.DataFrame], output_dir: str) -> Dict:
+    """Build user-item matrix and mappings for Phase 3: Candidate Generation.
+    
+    Args:
+        cleaned_data: Dictionary containing cleaned data
+        output_dir: Directory to save matrix files
+        
+    Returns:
+        Dictionary containing matrix data and statistics
+    """
+    try:
+        logger.info("Building user-item matrix for Phase 3...")
+        
+        # Build matrix and mappings
+        matrix, user_mapping, item_mapping = build_user_item_matrix()
+        
+        # Save to disk
+        save_matrix_and_mappings(matrix, user_mapping, item_mapping, Path(output_dir))
+        
+        # Return matrix data and stats
+        matrix_stats = {
+            'users': matrix.shape[0],
+            'products': matrix.shape[1],
+            'interactions': matrix.nnz,
+            'sparsity': 1 - matrix.nnz / (matrix.shape[0] * matrix.shape[1]),
+            'matrix_size_mb': matrix.data.nbytes / (1024 * 1024)
+        }
+        
+        logger.info(f"Matrix built successfully: {matrix.shape[0]:,} users × {matrix.shape[1]:,} products")
+        
+        return {
+            'matrix': matrix,
+            'user_mapping': user_mapping,
+            'item_mapping': item_mapping,
+            'stats': matrix_stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to build matrix for Phase 3: {e}")
+        raise
+
+
 def main():
     """Main entry point with command-line interface."""
     parser = argparse.ArgumentParser(
@@ -336,6 +385,9 @@ def main():
         print(f"   🎯 Training Samples: {len(result['transformed']['X_train']):,}")
         print(f"   🔍 Validation Samples: {len(result['transformed']['X_val']):,}")
         print(f"   📈 Features: {len(result['transformed']['X_train'].columns):,}")
+        print(f"   🔢 Matrix: {result['matrix']['stats']['users']:,} × {result['matrix']['stats']['products']:,}")
+        print(f"   📊 Matrix Sparsity: {result['matrix']['stats']['sparsity']:.2%}")
+        print(f"   💾 Matrix Size: {result['matrix']['stats']['matrix_size_mb']:.2f} MB")
         print("="*50)
         
         # Exit successfully

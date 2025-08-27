@@ -61,3 +61,8 @@ redis
 
 # Feature Store (Phase 2)
 feast
+
+# Phase 3: Retrieval & Candidate Generation
+faiss-cpu  # Use faiss-gpu for Google Colab with A100
+implicit  # Alternative ALS implementation
+lightfm  # Hybrid recommendation models

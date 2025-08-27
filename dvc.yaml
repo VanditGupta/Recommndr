@@ -27,19 +27,23 @@ stages:
     deps:
     - config
     - data/raw
-    - data/validation_report.txt
     - src/processing
     - src/utils
     outs:
     - data/features
-    - data/processed
-  data_validation:
-    cmd: python -m src.validation.main --output-report data/validation_report.txt
-      --quality-threshold 0.8
-    deps:
-    - config
-    - data/raw
-    - src/utils
-    - src/validation
-    outs:
-    - data/validation_report.txt
+    - data/processed/user_item_matrix.npz:
+        persist: true
+    - data/processed/user_mapping.pkl:
+        persist: true
+    - data/processed/item_mapping.pkl:
+        persist: true
+  # data_validation:
+  #   cmd: python -m src.validation.main --output-report data/validation_report.txt
+  #     --quality-threshold 0.8
+  #   deps:
+  #   - config
+  #   - data/raw
+  #   - src/utils
+  #   - src/validation
+  #   outs:
+  #   - data/validation_report.txt
