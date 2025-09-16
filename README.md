@@ -2,6 +2,11 @@
 
 A full-stack, production-grade ML system for real-time e-commerce recommendations using a **two-stage pipeline**: ALS (Collaborative Filtering) + LightGBM (Ranking).
 
+## 🎨 Frontend Preview
+
+![Recommndr Frontend](frontend/frontend.png)
+
+
 ## 🏗️ Architecture
 
 ![Recommndr Architecture](recommndr.png)
